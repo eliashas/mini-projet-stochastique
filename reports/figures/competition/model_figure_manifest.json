@@ -1,0 +1,14 @@
+{
+  "figures": [
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\residual_laws_max.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\residual_laws_max.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\bootstrap_anchor_max.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\bootstrap_anchor_max.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\residual_laws_min.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\residual_laws_min.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\bootstrap_anchor_min.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\bootstrap_anchor_min.svg"
+  ],
+  "errors": [],
+  "sampling_role": "visualization only, separate fixed seeds; no retraining"
+}

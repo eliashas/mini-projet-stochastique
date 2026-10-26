@@ -1,0 +1,39 @@
+kit_dir: data/kit
+original_kit_dir: 'C:/Users/edlas/OneDrive/Bureau/MCE/Stochastique/Projet SMA'
+full_archive: tmp/pdfs/data_temp_brest.zip
+output_dir: artifacts/competition
+seed_train: [0, 1, 2]
+seed_bootstrap: 7100
+seed_inference: 8200
+device: auto
+dtype_train: float32
+amp: false
+hidden_dims: [32, 32]
+activation: silu
+optimizer: adamw
+learning_rate: 0.001
+weight_decay: 0.0001
+batch_size: 64
+max_steps: 10000
+min_steps: 1000
+eval_every: 250
+patience_evaluations: 8
+gradient_clip_norm: 1.0
+crps_training_members: 32
+almost_fair_alpha: 0.95
+samples_early_stopping: 4096
+samples_comparison: 10000
+sampling_batch_size: 4096
+ddpm_steps: 100
+ddpm_schedule: cosine
+tail_lambda_grid: [0.5, 1.0, 2.0]
+anchor_bootstrap_replicates: 500
+anchor_bootstrap_block_length: 3
+anchor_bootstrap_sensitivity: 1
+selection_tolerance: 0.05
+complexity_order: [R0_gaussian, R2_empirical, R1_gev, C0_direct_crps, D1_ddm_crps, D2_ddm_tail, D3_ddm_anchor, D4_ddm_tail_anchor, D0_ddpm]
+final_steps_rule: median_best_steps_folds
+mixture_counts: [3334, 3333, 3333]
+projection_samples: 10000
+probability_mc_samples: 10000
+trajectory_mc_samples: 10000

@@ -1,0 +1,370 @@
+"""Small-data neural training with strict local resume and future-mode scoring.
+
+The interface receives arrays, not paths: it cannot open the competition truth.
+Training, corruption, latent and validation random draws use separate streams.
+The full optimizer and random states are saved at every evaluation checkpoint.
+"""
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import random
+import time
+from typing import Any
+
+import numpy as np
+import torch
+
+from .sampling import build_network, resolve_device
+from .scores import crps_rows, torch_crps
+
+
+DEFAULTS = {
+    "device": "auto", "dtype_train": "float32", "amp": False,
+    "hidden_dims": [32, 32], "activation": "silu", "optimizer": "adamw",
+    "learning_rate": 0.001, "weight_decay": 0.0001, "batch_size": 64,
+    "max_steps": 10000, "min_steps": 1000, "eval_every": 250,
+    "patience_evaluations": 8, "gradient_clip_norm": 1.0,
+    "crps_training_members": 32, "almost_fair_alpha": 0.95,
+    "samples_early_stopping": 4096, "sampling_batch_size": 4096,
+    "ddpm_steps": 100, "ddpm_schedule": "cosine", "ddpm_cosine_s": 0.008,
+    "tail_lambda": 1.0, "cpu_num_threads": 1,
+}
+
+
+def _jsonable(value: Any) -> Any:
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [_jsonable(v) for v in value]
+    return value
+
+
+def _json_write(path: Path, value: dict[str, Any]) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(_jsonable(value), ensure_ascii=False, indent=2,
+                                    allow_nan=False), encoding="utf-8")
+    temporary.replace(path)
+
+
+def _digest(value: Any) -> str:
+    return hashlib.sha256(json.dumps(_jsonable(value), sort_keys=True,
+                                     separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def _array_digest(value: np.ndarray) -> str:
+    array = np.ascontiguousarray(value, dtype=np.float64)
+    digest = hashlib.sha256()
+    digest.update(str(array.shape).encode("ascii"))
+    digest.update(array.tobytes())
+    return digest.hexdigest()
+
+
+def _relative(path: Path) -> str:
+    return Path(os.path.relpath(path, Path.cwd())).as_posix()
+
+
+def _capture_random_states(generator: torch.Generator) -> dict[str, Any]:
+    return {"python": random.getstate(), "numpy": np.random.get_state(),
+            "torch_cpu": torch.get_rng_state(),
+            "torch_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
+            "training_generator": generator.get_state()}
+
+
+def _restore_random_states(states: dict[str, Any], generator: torch.Generator) -> None:
+    random.setstate(states["python"])
+    np.random.set_state(states["numpy"])
+    torch.set_rng_state(states["torch_cpu"].cpu())
+    if states["torch_cuda"] and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all([state.cpu() for state in states["torch_cuda"]])
+    generator.set_state(states["training_generator"].cpu())
+
+
+def _save_checkpoint(path: Path, payload: dict[str, Any]) -> None:
+    temporary = path.with_suffix(".pt.tmp")
+    torch.save(payload, temporary)
+    temporary.replace(path)
+
+
+def _write_history(path: Path, rows: list[dict[str, Any]]) -> None:
+    columns = ["step", "loss", "validation_crps", "residual_mean", "residual_std",
+               "residual_q01", "residual_q10", "residual_q50", "residual_q90",
+               "residual_q99", "elapsed_seconds", "validation_seconds"]
+    temporary = path.with_suffix(".csv.tmp")
+    with temporary.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(rows)
+    temporary.replace(path)
+
+
+def _validated_vector(value: Any, name: str) -> np.ndarray:
+    array = np.asarray(value, dtype=np.float64)
+    if array.ndim != 1 or array.size == 0 or not np.isfinite(array).all():
+        raise ValueError(f"{name} must be a nonempty finite 1D array")
+    return array
+
+
+def train_network(model_id: str, z_train: np.ndarray, mu_train: np.ndarray,
+                  y_train: np.ndarray, sigma: float, threshold: float, variable: str,
+                  config: dict[str, Any], seed: int, run_dir: Path,
+                  validation: dict[str, Any] | None = None,
+                  fixed_steps: int | None = None) -> dict[str, Any]:
+    """Fit D0/C0/D1/D2, or reuse/resume an exactly matching local run.
+
+    Validation requires `y` and train-anchor predictions `mu`; optional `co2`
+    is fingerprinted for provenance but never passed to the residual network.
+    D3/D4 are generated by adding bootstrap anchors to parent checkpoints.
+    A completed run is reused. Increasing fixed_steps extends the same run;
+    changing any scientific setting or input refuses a conflicting directory.
+    """
+    resolved = {**DEFAULTS, **_jsonable(config)}
+    if "lambda_tail" in config and "tail_lambda" not in config:
+        resolved["tail_lambda"] = float(config["lambda_tail"])
+    if resolved["amp"] or resolved["dtype_train"] != "float32":
+        raise ValueError("The prescribed implementation uses float32 with AMP disabled")
+    if resolved["activation"] != "silu" or resolved["optimizer"] != "adamw":
+        raise ValueError("Only the prescribed SiLU and AdamW configuration is supported")
+    if variable not in {"max", "min"}:
+        raise ValueError("variable must be max or min")
+    if not np.isfinite(sigma) or sigma <= 0 or not np.isfinite(threshold):
+        raise ValueError("Expected positive finite sigma and finite threshold")
+    z_np = _validated_vector(z_train, "z_train")
+    mu_np = _validated_vector(mu_train, "mu_train")
+    y_np = _validated_vector(y_train, "y_train")
+    if not (z_np.shape == mu_np.shape == y_np.shape):
+        raise ValueError("Training arrays must have identical shapes")
+    if not np.allclose(mu_np + sigma * z_np, y_np, atol=1e-6, rtol=1e-6):
+        raise ValueError("z_train is inconsistent with the supplied training anchor and sigma")
+    val = None
+    if validation is not None:
+        val = {"y": _validated_vector(validation["y"], "validation.y"),
+               "mu": _validated_vector(validation["mu"], "validation.mu")}
+        if val["y"].shape != val["mu"].shape:
+            raise ValueError("Validation y and mu must have the same shape")
+        if "co2" in validation:
+            val["co2"] = _validated_vector(validation["co2"], "validation.co2")
+            if val["co2"].shape != val["y"].shape or (val["co2"] <= 0).any():
+                raise ValueError("Validation CO2 must be positive and aligned with y")
+    if val is None and fixed_steps is None:
+        raise ValueError("Final fitting without validation requires fixed_steps")
+    target_steps = int(fixed_steps if fixed_steps is not None else resolved["max_steps"])
+    if target_steps < 1 or int(resolved["eval_every"]) < 1 or int(resolved["batch_size"]) < 1:
+        raise ValueError("Steps, eval_every and batch_size must be positive")
+    if int(resolved["crps_training_members"]) < 2:
+        raise ValueError("CRPS training requires at least two ensemble members")
+    if not 0 <= float(resolved["almost_fair_alpha"]) <= 1 or float(resolved["tail_lambda"]) < 0:
+        raise ValueError("Invalid almost-fair coefficient or negative tail weight")
+    device = resolve_device(str(resolved["device"]))
+    if device.type == "cpu":
+        torch.set_num_threads(int(resolved["cpu_num_threads"]))
+    identity = {"model_id": model_id, "variable": variable, "seed": int(seed),
+                "config": resolved, "sigma": float(sigma), "threshold": float(threshold),
+                "training_fingerprints": {"z": _array_digest(z_np), "mu": _array_digest(mu_np),
+                                          "y": _array_digest(y_np)},
+                "validation_fingerprints": ({key: _array_digest(value) for key, value in val.items()}
+                                            if val is not None else None),
+                "fixed_steps_mode": fixed_steps is not None}
+    fingerprint = _digest(identity)
+    run_dir = Path(run_dir)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    last_path, best_path = run_dir / "last.pt", run_dir / "best.pt"
+    summary_path = run_dir / "metadata.json"
+    previous = None
+    if last_path.exists():
+        previous = torch.load(last_path, map_location="cpu", weights_only=False)
+        if previous.get("fingerprint") != fingerprint:
+            raise ValueError(f"Run directory contains a conflicting config or input: {run_dir}")
+        if previous.get("device_type") != device.type:
+            raise ValueError("Faithful resume requires the same device type (CPU versus CUDA)")
+        if summary_path.exists() and previous.get("status") == "completed" and (
+                fixed_steps is None or int(previous["step"]) >= target_steps):
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            return {**summary, "reused": True}
+    random.seed(int(seed))
+    np.random.seed(int(seed))
+    torch.manual_seed(int(seed))
+    if device.type == "cuda":
+        torch.cuda.manual_seed_all(int(seed))
+        torch.cuda.reset_peak_memory_stats(device)
+    model = build_network(model_id, resolved).to(device)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=float(resolved["learning_rate"]),
+                                 weight_decay=float(resolved["weight_decay"]))
+    generator = torch.Generator(device=device).manual_seed(int(seed) + 100003)
+    z_tensor = torch.as_tensor(z_np, dtype=torch.float32, device=device)
+    mu_tensor = torch.as_tensor(mu_np, dtype=torch.float32, device=device)
+    y_tensor = torch.as_tensor(y_np, dtype=torch.float32, device=device)
+    history: list[dict[str, Any]] = []
+    start_step = 0
+    best_step = 0
+    best_score = float("inf")
+    patience_count = 0
+    elapsed_before = 0.0
+    inference_seconds = 0.0
+    if previous is not None:
+        model.load_state_dict(previous["model_state"])
+        optimizer.load_state_dict(previous["optimizer_state"])
+        _restore_random_states(previous["rng_states"], generator)
+        start_step = int(previous["step"])
+        best_step = int(previous["best_step"])
+        best_score = float(previous["best_validation_crps"])
+        patience_count = int(previous["patience_count"])
+        history = previous["history"]
+        elapsed_before = float(previous["elapsed_seconds"])
+        inference_seconds = float(previous.get("inference_seconds", 0.0))
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    start_time = time.perf_counter()
+    current_step = start_step
+    loss_sum = 0.0
+    loss_count = 0
+    status = "running"
+    error_text = None
+
+    def elapsed() -> float:
+        return elapsed_before + time.perf_counter() - start_time
+
+    def checkpoint_payload() -> dict[str, Any]:
+        return {**identity, "fingerprint": fingerprint, "step": current_step,
+                "best_step": best_step, "best_validation_crps": best_score,
+                "patience_count": patience_count, "model_state": model.state_dict(),
+                "optimizer_state": optimizer.state_dict(), "rng_states": _capture_random_states(generator),
+                "history": history, "elapsed_seconds": elapsed(),
+                "inference_seconds": inference_seconds, "device_type": device.type,
+                "status": status, "error": error_text}
+
+    # Save a coherent boundary before the first update. An asynchronous
+    # interruption may land halfway through a gradient or optimizer update;
+    # faithful recovery therefore restarts from the last completed boundary,
+    # discarding at most eval_every-1 updates rather than saving partial state.
+    safe_step = start_step
+    if previous is None:
+        _save_checkpoint(last_path, checkpoint_payload())
+
+    try:
+        for current_step in range(start_step + 1, target_steps + 1):
+            model.train()
+            index = torch.randint(z_tensor.numel(), (int(resolved["batch_size"]),),
+                                  device=device, generator=generator)
+            batch_z = z_tensor[index]
+            optimizer.zero_grad(set_to_none=True)
+            if model_id == "D0_ddpm":
+                k = torch.randint(1, model.steps + 1, batch_z.shape, device=device, generator=generator)
+                noise = torch.randn(batch_z.shape, device=device, generator=generator)
+                noisy = model.corrupt(batch_z, k, noise)
+                loss = (model(noisy, k.float() / model.steps) - noise).square().mean()
+            else:
+                generated = model.training_ensemble(batch_z, int(resolved["crps_training_members"]), generator)
+                generated_y = mu_tensor[index, None] + float(sigma) * generated
+                observed_y = y_tensor[index]
+                # Location/scale equivariance: this equals sigma times residual
+                # afCRPS, while D2's additional transformed score stays in °C.
+                loss = torch_crps(generated_y, observed_y, alpha=float(resolved["almost_fair_alpha"])).mean()
+                if model_id == "D2_ddm_tail":
+                    transform = torch.clamp_min if variable == "max" else torch.clamp_max
+                    tail_score = torch_crps(transform(generated_y, float(threshold)),
+                                            transform(observed_y, float(threshold)),
+                                            alpha=float(resolved["almost_fair_alpha"])).mean()
+                    loss = loss + float(resolved["tail_lambda"]) * tail_score
+            if not bool(torch.isfinite(loss)):
+                raise FloatingPointError(f"Non-finite training objective at step {current_step}")
+            loss.backward()
+            grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), float(resolved["gradient_clip_norm"]),
+                                                       error_if_nonfinite=True)
+            optimizer.step()
+            loss_sum += float(loss.detach().cpu())
+            loss_count += 1
+            do_eval = current_step % int(resolved["eval_every"]) == 0 or current_step == target_steps
+            if not do_eval:
+                continue
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            eval_start = time.perf_counter()
+            model.eval()
+            # Fresh fixed evaluation stream at every checkpoint: comparisons
+            # use common noise without consuming training or global RNG state.
+            eval_generator = torch.Generator(device=device).manual_seed(int(seed) + 900001)
+            residual_draws = model.sample(int(resolved["samples_early_stopping"]), eval_generator,
+                                         int(resolved["sampling_batch_size"]))
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            draws = residual_draws.detach().cpu().numpy().astype(np.float64)
+            if not np.isfinite(draws).all():
+                raise FloatingPointError("Non-finite future-mode validation draws")
+            score = (float(np.mean(crps_rows(val["mu"][:, None] + float(sigma) * draws[None, :], val["y"])))
+                     if val is not None else None)
+            validation_seconds = time.perf_counter() - eval_start
+            inference_seconds += validation_seconds
+            quantiles = np.quantile(draws, [0.01, 0.10, 0.50, 0.90, 0.99])
+            row = {"step": current_step, "loss": loss_sum / loss_count,
+                   "validation_crps": score, "residual_mean": float(np.mean(draws)),
+                   "residual_std": float(np.std(draws)), "residual_q01": float(quantiles[0]),
+                   "residual_q10": float(quantiles[1]), "residual_q50": float(quantiles[2]),
+                   "residual_q90": float(quantiles[3]), "residual_q99": float(quantiles[4]),
+                   "elapsed_seconds": elapsed(), "validation_seconds": validation_seconds}
+            history.append(row)
+            loss_sum, loss_count = 0.0, 0
+            improved = score is not None and score < best_score
+            if improved:
+                best_score, best_step, patience_count = float(score), current_step, 0
+            elif current_step >= int(resolved["min_steps"]):
+                patience_count += 1
+            if fixed_steps is not None:
+                best_step = current_step  # fixed-duration refit uses its last parameters
+            early_stop = (fixed_steps is None and current_step >= int(resolved["min_steps"])
+                          and patience_count >= int(resolved["patience_evaluations"]))
+            status = "completed" if early_stop or current_step == target_steps else "running"
+            payload = checkpoint_payload()
+            _save_checkpoint(last_path, payload)
+            safe_step = current_step
+            if improved or fixed_steps is not None:
+                _save_checkpoint(best_path, payload)
+            _write_history(run_dir / "history.csv", history)
+            if early_stop:
+                break
+    except BaseException as error:
+        status = "interrupted" if isinstance(error, (KeyboardInterrupt, SystemExit)) else "failed"
+        error_text = f"{type(error).__name__}: {error}"
+        _json_write(run_dir / "error.json", {"status": status, "step": current_step,
+                                             "error": error_text, "fingerprint": fingerprint,
+                                             "resume_checkpoint_step": safe_step,
+                                             "recovery": "restart from coherent saved model/optimizer/RNG boundary"})
+        raise
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    if not best_path.exists():
+        raise RuntimeError("Training ended without a retained checkpoint")
+    summary = {**identity, "fingerprint": fingerprint, "status": "completed", "reused": False,
+               "steps": current_step, "best_step": best_step,
+               "best_validation_crps": best_score if np.isfinite(best_score) else None,
+               "checkpoint": _relative(best_path), "last_checkpoint": _relative(last_path),
+               "training_seconds": elapsed(), "inference_seconds": inference_seconds,
+               "device": str(device), "parameters": sum(p.numel() for p in model.parameters()),
+               "gpu_memory_allocated_peak_bytes": torch.cuda.max_memory_allocated(device) if device.type == "cuda" else 0,
+               "gpu_memory_reserved_peak_bytes": torch.cuda.max_memory_reserved(device) if device.type == "cuda" else 0,
+               "versions": {"python": platform.python_version(), "numpy": np.__version__,
+                            "torch": torch.__version__, "cuda": torch.version.cuda},
+               "gpu": torch.cuda.get_device_name(device) if device.type == "cuda" else None,
+               "dtype": "float32", "training_seed": int(seed),
+               "training_generator_seed": int(seed) + 100003,
+               "validation_generator_seed": int(seed) + 900001,
+               "target_steps": target_steps, "fixed_steps": fixed_steps,
+               "resume_from_step": start_step,
+               "validation_sampling": "common iid residual draws shifted by each train-only validation anchor",
+               "sample_units": "standardized residuals; training CRPS and validation CRPS in degrees Celsius"}
+    if model_id == "D0_ddpm":
+        summary["schedule"] = {"name": "cosine", "s": model.cosine_s, "steps": model.steps,
+                               "alpha_bar_terminal": float(model.alpha_bar[-1].detach().cpu()),
+                               "stored_in_checkpoint": True, "arbitrary_clipping": False}
+    _json_write(summary_path, summary)
+    return summary

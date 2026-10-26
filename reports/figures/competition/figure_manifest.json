@@ -1,0 +1,23 @@
+{
+  "phase": "competition",
+  "figures": [
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\learning_curves_max.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\learning_curves_max.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\learning_curves_min.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\learning_curves_min.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\validation_ablation_max.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\validation_ablation_max.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\validation_ablation_min.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\validation_ablation_min.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\validation_seed_dispersion.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\validation_seed_dispersion.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\coverage_width.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\coverage_width.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\pit_max.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\pit_max.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\pit_min.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\pit_min.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\event_probabilities.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\competition\\event_probabilities.svg"
+  ]
+}

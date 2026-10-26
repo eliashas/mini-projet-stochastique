@@ -1,0 +1,10 @@
+{
+  "figures": [
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\full_project\\residual_laws_max.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\full_project\\residual_laws_max.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\full_project\\residual_laws_min.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\reports\\figures\\full_project\\residual_laws_min.svg"
+  ],
+  "errors": [],
+  "sampling_role": "visualization only, separate fixed seeds; no retraining"
+}

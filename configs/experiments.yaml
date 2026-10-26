@@ -1,0 +1,6 @@
+extends: base.yaml
+models: [R0_gaussian, R1_gev, R2_empirical, D0_ddpm, C0_direct_crps, D1_ddm_crps, D2_ddm_tail, D3_ddm_anchor, D4_ddm_tail_anchor]
+folds:
+  F1: [1970, 1971, 1980]
+  F2: [1980, 1981, 1990]
+  F3: [1990, 1991, 2000]

@@ -1,0 +1,17 @@
+{
+  "notebooks": [
+    {
+      "path": "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\notebooks\\experiences_execute.ipynb",
+      "executed": true,
+      "cells": 28,
+      "code_cells": 14
+    },
+    {
+      "path": "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\notebooks\\rendu_projet.ipynb",
+      "executed": true,
+      "cells": 45,
+      "code_cells": 14
+    }
+  ],
+  "no_training": true
+}
