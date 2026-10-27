@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "resources": 252,
+  "requirements": 16,
+  "code_cells": 23,
+  "historical_prechecks": true,
+  "mixture_endpoints_exact": true,
+  "projections_recomputed": true,
+  "notebook_sha256": "264e4ce68eaa6dfeccdadaedf1a34cb99737856054866ca25cfc73817bc220bf",
+  "code_commit_verified": "2b9325fe425032879cf5b1c8b8b0762c8dff137c",
+  "remote_url": "https://github.com/eliashas/mini-projet-stochastique.git",
+  "branch": "final",
+  "fresh_remote_clone": true,
+  "required_files_present": [
+    "notebooks/rendu_final_equipe.ipynb",
+    "README_RENDU_FINAL.md",
+    "reports/matrice_conformite.csv",
+    "rendu_final/ressources_notebook.zip",
+    "rendu_final/data/yearly_temp_brest.csv",
+    "rendu_final/resultats/controle_projections_completes.csv"
+  ],
+  "force_push": false
+}

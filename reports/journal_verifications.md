@@ -101,3 +101,12 @@ Le paquet final contient 252 ressources embarquées : la base expérimentale
 initiale et le diagnostic des projections complètes. La dernière exécution
 propre du notebook maître, incluant cet échec, termine en 19 s environ sur
 CPU. Les 16 exigences de la matrice sont contrôlées.
+
+## Push et clone distant vérifiés
+
+Le code et le notebook ont été poussés sans force sur `final`, puis récupérés
+par un clone GitHub neuf au commit `2b9325fe425032879cf5b1c8b8b0762c8dff137c`. Les 252 ressources, les 16
+exigences et les prévisions recalculées passent les contrôles depuis ce clone.
+Les empreintes du notebook et des fichiers indispensables sont identiques.
+Le commit suivant ajoute uniquement cette preuve et ce journal. Les branches
+Elias, Christian, Reda et Yazid conservent leurs SHA d’origine.
