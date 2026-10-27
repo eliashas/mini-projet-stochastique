@@ -1,0 +1,107 @@
+{
+  "wall_seconds": 4221.287037500006,
+  "neural_runs": 108,
+  "failures": 0,
+  "config": {
+    "kit_dir": "data/kit",
+    "original_kit_dir": "C:/Users/edlas/OneDrive/Bureau/MCE/Stochastique/Projet SMA",
+    "full_archive": "tmp/pdfs/data_temp_brest.zip",
+    "output_dir": "artifacts/competition",
+    "seed_train": [
+      0,
+      1,
+      2
+    ],
+    "seed_bootstrap": 7100,
+    "seed_inference": 8200,
+    "device": "auto",
+    "dtype_train": "float32",
+    "amp": false,
+    "hidden_dims": [
+      32,
+      32
+    ],
+    "activation": "silu",
+    "optimizer": "adamw",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 64,
+    "max_steps": 10000,
+    "min_steps": 1000,
+    "eval_every": 250,
+    "patience_evaluations": 8,
+    "gradient_clip_norm": 1.0,
+    "crps_training_members": 32,
+    "almost_fair_alpha": 0.95,
+    "samples_early_stopping": 4096,
+    "samples_comparison": 10000,
+    "sampling_batch_size": 4096,
+    "ddpm_steps": 100,
+    "ddpm_schedule": "cosine",
+    "tail_lambda_grid": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "anchor_bootstrap_replicates": 500,
+    "anchor_bootstrap_block_length": 3,
+    "anchor_bootstrap_sensitivity": 1,
+    "selection_tolerance": 0.05,
+    "complexity_order": [
+      "R0_gaussian",
+      "R2_empirical",
+      "R1_gev",
+      "C0_direct_crps",
+      "D1_ddm_crps",
+      "D2_ddm_tail",
+      "D3_ddm_anchor",
+      "D4_ddm_tail_anchor",
+      "D0_ddpm"
+    ],
+    "final_steps_rule": "median_best_steps_folds",
+    "mixture_counts": [
+      3334,
+      3333,
+      3333
+    ],
+    "projection_samples": 10000,
+    "probability_mc_samples": 10000,
+    "trajectory_mc_samples": 10000,
+    "models": [
+      "R0_gaussian",
+      "R1_gev",
+      "R2_empirical",
+      "D0_ddpm",
+      "C0_direct_crps",
+      "D1_ddm_crps",
+      "D2_ddm_tail",
+      "D3_ddm_anchor",
+      "D4_ddm_tail_anchor"
+    ],
+    "folds": {
+      "F1": [
+        1970,
+        1971,
+        1980
+      ],
+      "F2": [
+        1980,
+        1981,
+        1990
+      ],
+      "F3": [
+        1990,
+        1991,
+        2000
+      ]
+    }
+  },
+  "config_sha256": "9376e1d5c04884550ac615b029386b1f4e76149f01c3cca2efc53f7964685242",
+  "inputs": {
+    "yearly_temp_brest_train.csv": "1f68ca45dda3527486c90d80b447918fc331dd13e30bd1841aa12d85f6752e5d",
+    "daily_temp_brest_train.csv": "c21b20ce2477c88ccc4f9884691deb42bb59001b220724dfdf31d41a76ddeb4b",
+    "test_inputs.csv": "3aaddab34d0b54c60dea7835d48dac9b5f9b477a993e95648dee12af88a1e184",
+    "yearly_future_co2.csv": "c39c3402b505eddbca00a00f50ae64c258c3b6e872ae8313db896d7233e8a0b5"
+  },
+  "code_sha256": "e03a2bb16aa55be9cbc1c78919c86b5af4681768787fc56e7c0f5f45fc485b01"
+}

@@ -1,0 +1,56 @@
+{
+  "h0_components": {
+    "max": "D3",
+    "min": "D1"
+  },
+  "quantiles": {
+    "max": "QR_1",
+    "min": "QR_1"
+  },
+  "h0": {
+    "max": "H0_D3_0",
+    "min": "H0_D1_0"
+  },
+  "validation_first": {
+    "max": "D3",
+    "min": "D1"
+  },
+  "selected": {
+    "max": "D3",
+    "min": "D1"
+  },
+  "test_previously_consulted": true,
+  "test_used_for_selection": false,
+  "rankings": {
+    "max": [
+      "D3",
+      "H0_D3_0",
+      "D4",
+      "D1",
+      "D2",
+      "QR_1",
+      "Bayes0",
+      "C0",
+      "H1",
+      "GEV",
+      "Bayes",
+      "R_log",
+      "R_linear"
+    ],
+    "min": [
+      "D1",
+      "H0_D1_0",
+      "D3",
+      "D2",
+      "D4",
+      "Bayes0",
+      "QR_1",
+      "C0",
+      "Bayes",
+      "R_log",
+      "R_linear",
+      "H1",
+      "Reda_min"
+    ]
+  }
+}

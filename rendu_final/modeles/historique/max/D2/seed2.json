@@ -1,0 +1,18 @@
+{
+  "identity": {
+    "train_y": "5eb5a61a78eb07ea700388dd5aae943d02bfba17d7c6fd3f521e9876eb60e331",
+    "train_z": "cd61f1e36c1c81412ee89053ff1e055f5a8c4c50959e60750cdc464dd1fcabd0",
+    "model": "D2",
+    "phase": "historique",
+    "seed": 2
+  },
+  "reused_historical": true,
+  "source_checkpoint": "artifacts/competition/final/max/D2_ddm_tail/seed2/best.pt",
+  "source_sha256": "91e78a24a32daedb49f7369e2ba4d2103c3917da9624c326887fe8f8e697d1e6",
+  "weights_sha256": "550f3e7b4ae9a499e74ca292d03babae23c04e22826706f158ec7d56f3935aa7",
+  "best_step": 750,
+  "training_seconds": 8.583853800024372,
+  "additional_seconds": 0.010671199997887015,
+  "device": "cuda",
+  "parameters": 1217
+}

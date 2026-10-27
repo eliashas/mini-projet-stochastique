@@ -1,3 +1,5 @@
+> **Rendu commun de l’équipe (branche `final`)** : ouvrir [le notebook final exécuté](notebooks/rendu_final_equipe.ipynb) et [les instructions de reproduction](README_RENDU_FINAL.md). Le notebook embarque ses ressources et couvre les deux parties du sujet. Les sections ci-dessous décrivent le pipeline historique d’Elias, conservé comme provenance.
+
 # Projet SMA — extrêmes annuels et vagues de chaleur à Brest
 
 Implémentation et expériences du [cahier des charges](PLAN_IMPLEMENTATION_MODELES_SMA.md). Les températures sont en °C et le CO₂ en ppm. Les références gaussienne, GEV et empirique sont comparées à DDPM, au générateur direct CRPS, au débruiteur stochastique CRPS et aux ablations de queue et d'incertitude de l'ancre.

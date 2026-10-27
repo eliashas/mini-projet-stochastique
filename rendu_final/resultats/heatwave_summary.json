@@ -1,0 +1,29 @@
+{
+  "phase": "rendu_commun",
+  "reference_start": "1940-01-01",
+  "reference_end": "2025-12-31",
+  "daily_rows": 31412,
+  "missing_dates": 0,
+  "feb29_days": 22,
+  "climatology_days": 365,
+  "smoothing_window_days": 31,
+  "events_min3": 421,
+  "events_min2": 798,
+  "maximum_duration_min3_days": 14,
+  "mean_intensity_min3_C": 3.587129639474805,
+  "mean_excess_q90_min3_C": 1.1839315092731477,
+  "units": "°C; duration in days",
+  "event_definition": "maximal consecutive runs mean > smoothed q90",
+  "intensity_definition": "event mean(mean temperature - smoothed q50)",
+  "excess_definition": "event mean(mean temperature - smoothed q90)",
+  "feb29_rule": "excluded from quantiles; thresholds interpolate February 28 / March 1",
+  "interpretation": "descriptive climatology over supplied reference period; not out-of-sample prediction",
+  "figures": [
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\final_analysis\\partie1\\heatwave_seasonal_cycle.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\final_analysis\\partie1\\heatwave_seasonal_cycle.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\final_analysis\\partie1\\heatwave_duration_intensity.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\final_analysis\\partie1\\heatwave_duration_intensity.svg",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\final_analysis\\partie1\\heatwave_counts.png",
+    "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\final_analysis\\partie1\\heatwave_counts.svg"
+  ]
+}

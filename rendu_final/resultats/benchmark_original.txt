@@ -1,0 +1,3 @@
+Tests de cohérence : OK
+SCORE FINAL (CRPS du max, 2001-2025) : 1.65 °C   (référence à battre : 1.70)
+Départage   (CRPS du min, 2001-2025) : 1.04 °C   (référence : 1.06)

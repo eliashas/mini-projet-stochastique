@@ -1,0 +1,704 @@
+{
+  "candidate": "participant",
+  "selected_models": {
+    "max": "C0_direct_crps",
+    "min": "D1_ddm_crps"
+  },
+  "predictions": [
+    {
+      "id": "R0_exact",
+      "path": "artifacts\\competition\\predictions\\R0_exact.npz",
+      "sha256": "b2b1749be6e4bfc859496971ccdda33ac7b78e27357cefb023b2a1755654cfef",
+      "models": {
+        "max": "R0_gaussian",
+        "min": "R0_gaussian"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 4.965404634729429,
+            "future_width80": 4.942500995700261,
+            "projection_medians": [
+              25.470792481078306,
+              25.777845891176852,
+              26.498615153997946
+            ],
+            "smallest": 16.611369581736106,
+            "largest": 34.61264080806974,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.090125710577505,
+            "future_width80": 5.07364239212788,
+            "projection_medians": [
+              -0.9773479513474066,
+              -0.9463977399031842,
+              -0.987482885639658
+            ],
+            "smallest": -10.021376273712725,
+            "largest": 7.758253319971276,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "R0_gaussian",
+      "path": "artifacts\\competition\\predictions\\R0_gaussian.npz",
+      "sha256": "8420d36dea86c55cffd53b73add7abb9cdc3da8c08ea55ff304a036f124a0f08",
+      "models": {
+        "max": "R0_gaussian",
+        "min": "R0_gaussian"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.001831199612546,
+            "future_width80": 5.001831199612546,
+            "projection_medians": [
+              25.42720841489747,
+              25.759442718505667,
+              26.464732832331464
+            ],
+            "smallest": 18.168590468583847,
+            "largest": 33.68358718686018,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.048656571009092,
+            "future_width80": 5.048656571009092,
+            "projection_medians": [
+              -0.9426152603212812,
+              -0.9426152603212812,
+              -0.9426152603212812
+            ],
+            "smallest": -8.215169038978454,
+            "largest": 8.2337916348475,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "R1_gev",
+      "path": "artifacts\\competition\\predictions\\R1_gev.npz",
+      "sha256": "87ad2f51e3a024e88f18a836a292f9746fceeb7f2b443261144720981727a103",
+      "models": {
+        "max": "R1_gev",
+        "min": "R1_gev"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 4.787537658196119,
+            "future_width80": 4.787537658196118,
+            "projection_medians": [
+              25.290168458177583,
+              25.622402761785786,
+              26.327692875611575
+            ],
+            "smallest": 20.713375756678584,
+            "largest": 35.15518529787518,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 4.865883530040231,
+            "future_width80": 4.865883530040231,
+            "projection_medians": [
+              -0.6543606367191156,
+              -0.6543606367191156,
+              -0.6543606367191156
+            ],
+            "smallest": -12.890551474668774,
+            "largest": 3.4887111089626788,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "R2_empirical",
+      "path": "artifacts\\competition\\predictions\\R2_empirical.npz",
+      "sha256": "533e860b9d96300f1812db6a01db4573b1dfa339a7d91609b7ff3334b560fa0b",
+      "models": {
+        "max": "R2_empirical",
+        "min": "R2_empirical"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.23863225056342,
+            "future_width80": 5.23863225056342,
+            "projection_medians": [
+              25.097643159481454,
+              25.429877463089653,
+              26.135167576915446
+            ],
+            "smallest": 21.879520966980213,
+            "largest": 31.49937347241447,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.24169921875,
+            "future_width80": 5.24169921875,
+            "projection_medians": [
+              -0.726531982421875,
+              -0.726531982421875,
+              -0.726531982421875
+            ],
+            "smallest": -6.604339599609375,
+            "largest": 2.195220947265625,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "D0_ddpm",
+      "path": "artifacts\\competition\\predictions\\D0_ddpm.npz",
+      "sha256": "e13488ae410c7b36abbcf74c108cd22626889c13cdcddd74ff90a7ff24ccc465",
+      "models": {
+        "max": "D0_ddpm",
+        "min": "D0_ddpm"
+      },
+      "checks": {
+        "admissible": false,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 4.922453786273252,
+            "future_width80": 4.922453786273252,
+            "projection_medians": [
+              25.150073670118797,
+              25.482307973726996,
+              26.18759808755279
+            ],
+            "smallest": 20.476337700839085,
+            "largest": 33.38101653164206,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": false,
+            "test_width80": 6.900453860087538,
+            "future_width80": 6.900453860087538,
+            "projection_medians": [
+              -0.9324214096577538,
+              -0.9324214096577538,
+              -0.9324214096577538
+            ],
+            "smallest": -1933.2162934916798,
+            "largest": 3.8422453567697725,
+            "outside_bounds": 19152,
+            "non_degenerate": true
+          }
+        },
+        "errors": [
+          "min: bornes"
+        ]
+      }
+    },
+    {
+      "id": "C0_direct_crps",
+      "path": "artifacts\\competition\\predictions\\C0_direct_crps.npz",
+      "sha256": "93378d3eb427857afaa92552a06faabb208e9f3fb3dbe361c9cb364349d2a1d7",
+      "models": {
+        "max": "C0_direct_crps",
+        "min": "C0_direct_crps"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.019624766399222,
+            "future_width80": 5.019624766399222,
+            "projection_medians": [
+              25.12611635511299,
+              25.458350658721187,
+              26.163640772546984
+            ],
+            "smallest": 18.576956242120726,
+            "largest": 36.66408503779437,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 4.829217018255687,
+            "future_width80": 4.829217018255687,
+            "projection_medians": [
+              -0.5777938358079773,
+              -0.5777938358079773,
+              -0.5777938358079773
+            ],
+            "smallest": -14.330419058181885,
+            "largest": 4.188416737276608,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "D1_ddm_crps",
+      "path": "artifacts\\competition\\predictions\\D1_ddm_crps.npz",
+      "sha256": "a04201fe4d21d40dbae419ad26f5c1d460b80da14cc4488db66a9fbb18912787",
+      "models": {
+        "max": "D1_ddm_crps",
+        "min": "D1_ddm_crps"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.9967564830527955,
+            "future_width80": 5.9967564830527955,
+            "projection_medians": [
+              25.260616131144772,
+              25.59285043475297,
+              26.298140548578765
+            ],
+            "smallest": 18.730902294056346,
+            "largest": 37.36128962446605,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.679084563718272,
+            "future_width80": 5.679084563718271,
+            "projection_medians": [
+              -0.7219305511629748,
+              -0.7219305511629748,
+              -0.7219305511629748
+            ],
+            "smallest": -10.900842489801107,
+            "largest": 4.743346329913901,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "D2_ddm_tail",
+      "path": "artifacts\\competition\\predictions\\D2_ddm_tail.npz",
+      "sha256": "2b9562925bb39b8aaa70b7fc474491df90bacb03445fafe9b1483a42cb91ae88",
+      "models": {
+        "max": "D2_ddm_tail",
+        "min": "D2_ddm_tail"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.914733674209865,
+            "future_width80": 5.914733674209863,
+            "projection_medians": [
+              25.264910869663034,
+              25.597145173271237,
+              26.302435287097026
+            ],
+            "smallest": 18.249296329576556,
+            "largest": 37.08266671277073,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.780186414070175,
+            "future_width80": 5.780186414070174,
+            "projection_medians": [
+              -0.6233150954706991,
+              -0.6233150954706991,
+              -0.6233150954706991
+            ],
+            "smallest": -11.426074457346932,
+            "largest": 5.149104951746924,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "D3_ddm_anchor",
+      "path": "artifacts\\competition\\predictions\\D3_ddm_anchor.npz",
+      "sha256": "06b3e18cd2ecd0f27a82f26ab270ceaa6b580cbd29346c68ec85afb5c263f88b",
+      "models": {
+        "max": "D3_ddm_anchor",
+        "min": "D3_ddm_anchor"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 6.057153827308047,
+            "future_width80": 8.901339380691912,
+            "projection_medians": [
+              25.406626396750383,
+              25.964905486576725,
+              26.959169445006612
+            ],
+            "smallest": 18.25836183153258,
+            "largest": 43.99741123322101,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.796358867130159,
+            "future_width80": 8.058118042647415,
+            "projection_medians": [
+              -0.477885491658528,
+              -0.11485767501694889,
+              0.4848739047121464
+            ],
+            "smallest": -11.167645668431998,
+            "largest": 16.42828281457346,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "D4_ddm_tail_anchor",
+      "path": "artifacts\\competition\\predictions\\D4_ddm_tail_anchor.npz",
+      "sha256": "88c5e4f407e5091779d1320ae97cf96d495be02ca241124cb3bda56d42bbe5ae",
+      "models": {
+        "max": "D4_ddm_tail_anchor",
+        "min": "D4_ddm_tail_anchor"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.987686766203007,
+            "future_width80": 8.855857633334676,
+            "projection_medians": [
+              25.391674770453307,
+              25.957941934362474,
+              26.931521289987465
+            ],
+            "smallest": 17.77675586705279,
+            "largest": 43.60594259798562,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.879688036579954,
+            "future_width80": 8.13262397851614,
+            "projection_medians": [
+              -0.3902940300418625,
+              -0.006111831432901171,
+              0.575825044963186
+            ],
+            "smallest": -11.692877635977823,
+            "largest": 16.445384685744827,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "participant",
+      "path": "artifacts\\competition\\predictions\\participant.npz",
+      "sha256": "bb6e2d76ab2d01dfe6150c1f30cc24f2794bc58de20bb76bcdce26a5bf55749b",
+      "models": {
+        "max": "C0_direct_crps",
+        "min": "D1_ddm_crps"
+      },
+      "checks": {
+        "admissible": true,
+        "variables": {
+          "max": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.019624766399222,
+            "future_width80": 5.019624766399222,
+            "projection_medians": [
+              25.12611635511299,
+              25.458350658721187,
+              26.163640772546984
+            ],
+            "smallest": 18.576956242120726,
+            "largest": 36.66408503779437,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          },
+          "min": {
+            "monotonic": true,
+            "width_ok": true,
+            "bounds_ok": true,
+            "test_width80": 5.679084563718272,
+            "future_width80": 5.679084563718271,
+            "projection_medians": [
+              -0.7219305511629748,
+              -0.7219305511629748,
+              -0.7219305511629748
+            ],
+            "smallest": -10.900842489801107,
+            "largest": 4.743346329913901,
+            "outside_bounds": 0,
+            "non_degenerate": true
+          }
+        },
+        "errors": []
+      }
+    }
+  ],
+  "checkpoint_hashes": {
+    "artifacts\\competition\\final\\max\\D0_ddpm\\seed0\\best.pt": "1159542a331152b825627752cb7770169c9483a6ebd6a438ffda7dcd1b6de041",
+    "artifacts\\competition\\final\\max\\D0_ddpm\\seed1\\best.pt": "3037f421e90273c5afea532e5b031f71443d24cf85ea13191621d6925e666ef0",
+    "artifacts\\competition\\final\\max\\D0_ddpm\\seed2\\best.pt": "e8968c392273e8760b23b2bafac9f54d62a48729e5413bec7617e7632b5d41b9",
+    "artifacts\\competition\\final\\max\\C0_direct_crps\\seed0\\best.pt": "d7fd0dc8fabe938cae9c360a60c7b37eced0c6ae01fcbb0f5a41449cc9c12df2",
+    "artifacts\\competition\\final\\max\\C0_direct_crps\\seed1\\best.pt": "1dacc09bd41e8ffce8e0254b4f01592b031815ff14c30a82b27bfdbd6a613594",
+    "artifacts\\competition\\final\\max\\C0_direct_crps\\seed2\\best.pt": "5b6c4e68666d1de1e9a0ec43f951e4925add862b3fc84cc8b91d359f9c874a69",
+    "artifacts\\competition\\final\\max\\D1_ddm_crps\\seed0\\best.pt": "339dd6b5b46545cab68cd27d552c5307a5737358361f5b585df12be7351db9d3",
+    "artifacts\\competition\\final\\max\\D1_ddm_crps\\seed1\\best.pt": "7ef49b2e2195e2ae3b117e88c7d0f67ff03f9288be3d022b24272138d3475f08",
+    "artifacts\\competition\\final\\max\\D1_ddm_crps\\seed2\\best.pt": "630e2eea1b94e2fd88541db1f3ece6a611dbe8b11872b64b47c42a791ce7f562",
+    "artifacts\\competition\\final\\max\\D2_ddm_tail\\seed0\\best.pt": "692e6ff75f9c75f71379084386376f7147de5eb4028c4b86d17354680340c212",
+    "artifacts\\competition\\final\\max\\D2_ddm_tail\\seed1\\best.pt": "010df1303369f77fb3d57aa267258b7702aa28926f146cc45120eb042237015b",
+    "artifacts\\competition\\final\\max\\D2_ddm_tail\\seed2\\best.pt": "91e78a24a32daedb49f7369e2ba4d2103c3917da9624c326887fe8f8e697d1e6",
+    "artifacts\\competition\\final\\min\\D0_ddpm\\seed0\\best.pt": "67af8179c8da30a59c0b16af4c0abebc4309c19d2906faa47e16da696810e06b",
+    "artifacts\\competition\\final\\min\\D0_ddpm\\seed1\\best.pt": "1c8bf163a629e1fdee9488f8523c7d361d7ed1d723de2e73c91dd7633e069f6c",
+    "artifacts\\competition\\final\\min\\D0_ddpm\\seed2\\best.pt": "f285cae8eb7cfd71a5504f1b9c8cd919cff67ea6c3f76222125f1ac9df2acd09",
+    "artifacts\\competition\\final\\min\\C0_direct_crps\\seed0\\best.pt": "5503e91ff2a022f5f8047401e50bcceabf94f85282a946490abccb88c084bc60",
+    "artifacts\\competition\\final\\min\\C0_direct_crps\\seed1\\best.pt": "d00ffa78bed83098d711735a672c9f8c91eff0bd4fdfcac515f576f342f43730",
+    "artifacts\\competition\\final\\min\\C0_direct_crps\\seed2\\best.pt": "64be62ee279d6ebc9a792016ac9959dab2e75596c57758dd3e27e6b5e299b497",
+    "artifacts\\competition\\final\\min\\D1_ddm_crps\\seed0\\best.pt": "9d116cc205f42f6d7f06e2c8a8594c1bf46a24c9ef9e2c6f29f4d408b373d2ad",
+    "artifacts\\competition\\final\\min\\D1_ddm_crps\\seed1\\best.pt": "c10e5a5bef7d2669003fa659f4ea3255770e8c24c805410d1069d581f9328b11",
+    "artifacts\\competition\\final\\min\\D1_ddm_crps\\seed2\\best.pt": "bbdc134155f6435a7892ac91483e2f1a534d01f25b8a278c327aa8bb969ed2a0",
+    "artifacts\\competition\\final\\min\\D2_ddm_tail\\seed0\\best.pt": "c9ec8615a512a5322b93246d9223bb881716e17f2bdc337aa208d7b123c36c7e",
+    "artifacts\\competition\\final\\min\\D2_ddm_tail\\seed1\\best.pt": "880bf5433268478b23f1b99c215cc474973a19beab8fd1f30dbd4e92391a1ecb",
+    "artifacts\\competition\\final\\min\\D2_ddm_tail\\seed2\\best.pt": "4e2523d776d62dd29862e5542119d37d3c4dead60ff39b0dd630447074499693"
+  },
+  "selection_sha256": "754e3edc591ac2c6200b81020706fc2e41f0984e7827318f497674ccf6c31dd0",
+  "config": {
+    "kit_dir": "data/kit",
+    "original_kit_dir": "C:/Users/edlas/OneDrive/Bureau/MCE/Stochastique/Projet SMA",
+    "full_archive": "tmp/pdfs/data_temp_brest.zip",
+    "output_dir": "artifacts/competition",
+    "seed_train": [
+      0,
+      1,
+      2
+    ],
+    "seed_bootstrap": 7100,
+    "seed_inference": 8200,
+    "device": "auto",
+    "dtype_train": "float32",
+    "amp": false,
+    "hidden_dims": [
+      32,
+      32
+    ],
+    "activation": "silu",
+    "optimizer": "adamw",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 64,
+    "max_steps": 10000,
+    "min_steps": 1000,
+    "eval_every": 250,
+    "patience_evaluations": 8,
+    "gradient_clip_norm": 1.0,
+    "crps_training_members": 32,
+    "almost_fair_alpha": 0.95,
+    "samples_early_stopping": 4096,
+    "samples_comparison": 10000,
+    "sampling_batch_size": 4096,
+    "ddpm_steps": 100,
+    "ddpm_schedule": "cosine",
+    "tail_lambda_grid": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "anchor_bootstrap_replicates": 500,
+    "anchor_bootstrap_block_length": 3,
+    "anchor_bootstrap_sensitivity": 1,
+    "selection_tolerance": 0.05,
+    "complexity_order": [
+      "R0_gaussian",
+      "R2_empirical",
+      "R1_gev",
+      "C0_direct_crps",
+      "D1_ddm_crps",
+      "D2_ddm_tail",
+      "D3_ddm_anchor",
+      "D4_ddm_tail_anchor",
+      "D0_ddpm"
+    ],
+    "final_steps_rule": "median_best_steps_folds",
+    "mixture_counts": [
+      3334,
+      3333,
+      3333
+    ],
+    "projection_samples": 10000,
+    "probability_mc_samples": 10000,
+    "trajectory_mc_samples": 10000,
+    "models": [
+      "R0_gaussian",
+      "R1_gev",
+      "R2_empirical",
+      "D0_ddpm",
+      "C0_direct_crps",
+      "D1_ddm_crps",
+      "D2_ddm_tail",
+      "D3_ddm_anchor",
+      "D4_ddm_tail_anchor"
+    ],
+    "folds": {
+      "F1": [
+        1970,
+        1971,
+        1980
+      ],
+      "F2": [
+        1980,
+        1981,
+        1990
+      ],
+      "F3": [
+        1990,
+        1991,
+        2000
+      ]
+    }
+  },
+  "config_sha256": "9376e1d5c04884550ac615b029386b1f4e76149f01c3cca2efc53f7964685242",
+  "code_sha256": "d00451aa971f13c2389e2fdd8e05ece5f42642e68b6c189b731b80ca9719b31f",
+  "thresholds": {
+    "max": 27.31674194335937,
+    "min": -1.915924072265625
+  },
+  "kit_sha256": "0997ac0db31ee461f032469c376d100b54ed76fe6cbf67734ec52f46445c2eaf",
+  "input_hashes": {
+    "yearly_temp_brest_train.csv": "1f68ca45dda3527486c90d80b447918fc331dd13e30bd1841aa12d85f6752e5d",
+    "daily_temp_brest_train.csv": "c21b20ce2477c88ccc4f9884691deb42bb59001b220724dfdf31d41a76ddeb4b",
+    "test_inputs.csv": "3aaddab34d0b54c60dea7835d48dac9b5f9b477a993e95648dee12af88a1e184",
+    "yearly_future_co2.csv": "c39c3402b505eddbca00a00f50ae64c258c3b6e872ae8313db896d7233e8a0b5"
+  },
+  "test_years": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "scenarios": [
+    "ssp1-2.6",
+    "ssp2-4.5",
+    "ssp5-8.5"
+  ],
+  "units": "°C",
+  "test_truth_opened": false,
+  "mixture_counts": [
+    3334,
+    3333,
+    3333
+  ],
+  "locked": true,
+  "locked_source_sha256": "9776ae2eb7f0201ececad9a36435b348a2b3cdcb356491167e574ce7e162f2fe",
+  "selection_validation_sha256": "7f111d8980ef6274d24e644eb2bef87fb8ad2c23bd24b8a516ef1db9ba67df18"
+}

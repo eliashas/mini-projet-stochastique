@@ -6,3 +6,5 @@ artifacts/
 data/
 tmp/
 *.log
+!rendu_final/data/
+!rendu_final/data/*.csv

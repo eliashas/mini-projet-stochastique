@@ -1,0 +1,79 @@
+{
+  "files": [
+    {
+      "file": "daily_temp_brest.csv",
+      "rows": 31412,
+      "columns": [
+        "valid_time",
+        "mean"
+      ],
+      "sha256": "0eb44f9adcf0e876d3ad017f4efbd540f24d40c1aaf2562c4f9648447ab16613"
+    },
+    {
+      "file": "daily_temp_brest_train.csv",
+      "rows": 22281,
+      "columns": [
+        "valid_time",
+        "mean"
+      ],
+      "sha256": "c21b20ce2477c88ccc4f9884691deb42bb59001b220724dfdf31d41a76ddeb4b"
+    },
+    {
+      "file": "test_inputs.csv",
+      "rows": 25,
+      "columns": [
+        "valid_time",
+        "co2"
+      ],
+      "sha256": "3aaddab34d0b54c60dea7835d48dac9b5f9b477a993e95648dee12af88a1e184"
+    },
+    {
+      "file": "verite_2001_2025.csv",
+      "rows": 25,
+      "columns": [
+        "annee",
+        "max",
+        "min"
+      ],
+      "sha256": "28b7205ec23bc12ce2d417a0db396c5a71daeb6c467b848d154a5eb3d25ad217"
+    },
+    {
+      "file": "yearly_future_co2.csv",
+      "rows": 75,
+      "columns": [
+        "valid_time",
+        "ssp1-2.6",
+        "ssp2-4.5",
+        "ssp5-8.5"
+      ],
+      "sha256": "c39c3402b505eddbca00a00f50ae64c258c3b6e872ae8313db896d7233e8a0b5"
+    },
+    {
+      "file": "yearly_temp_brest.csv",
+      "rows": 86,
+      "columns": [
+        "valid_time",
+        "max",
+        "min",
+        "co2"
+      ],
+      "sha256": "dc99cbcf4d7e485ab55f5a99cdd13e10ef7afb79230c4389240f759c84f8eb1f"
+    },
+    {
+      "file": "yearly_temp_brest_train.csv",
+      "rows": 61,
+      "columns": [
+        "valid_time",
+        "max",
+        "min",
+        "co2"
+      ],
+      "sha256": "1f68ca45dda3527486c90d80b447918fc331dd13e30bd1841aa12d85f6752e5d"
+    }
+  ],
+  "training_prefix_matches_full": true,
+  "test_truth_matches_full": true,
+  "daily_prefix_matches_full": true,
+  "no_missing_calendar_dates": true,
+  "external_observations_added": false
+}

@@ -1,0 +1,18 @@
+{
+  "identity": {
+    "train_y": "df6fde18ec3959f6371f6ab5afe2460d6ba163d4553d9fb68d2ddea1efe24d73",
+    "train_z": "4623bd5b1b71b8ab1a8593e1ae31642da6fc1683933750d34dd73848a476033f",
+    "model": "C0",
+    "phase": "complet",
+    "seed": 1
+  },
+  "reused_historical": false,
+  "source_checkpoint": "artifacts/final_team_training/rendu_final/complet/min/C0/seed1/best.pt",
+  "source_sha256": "4c0558b615aada3ab2538f6f862ecdcb21ccfe7efdb627f48556f9d19d4c5eca",
+  "weights_sha256": "525608f283985ec63b5d76ddf2b0ea625f791311d920948a83415f704383cb56",
+  "best_step": 2500,
+  "training_seconds": 29.012629900011234,
+  "additional_seconds": 29.033513800008222,
+  "device": "cuda",
+  "parameters": 1217
+}

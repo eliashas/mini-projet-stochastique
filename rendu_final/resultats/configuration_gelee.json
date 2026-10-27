@@ -1,0 +1,42 @@
+{
+  "folds": {
+    "F1": [
+      1970,
+      1971,
+      1980
+    ],
+    "F2": [
+      1980,
+      1981,
+      1990
+    ],
+    "F3": [
+      1990,
+      1991,
+      2000
+    ]
+  },
+  "n_samples": 10000,
+  "alpha_grid": [
+    0.0,
+    0.01,
+    0.1,
+    1.0
+  ],
+  "weight_grid": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "h0_components": [
+    "D1",
+    "D3"
+  ],
+  "h1_residual": "D1",
+  "lambda_tail": 0.5,
+  "main_metric": "CRPS global",
+  "test_previously_consulted": true,
+  "decision": "minimum non arrondi en validation, puis contrôles sans températures test ; aucun filtre de simplicité à 0.05"
+}

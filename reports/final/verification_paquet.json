@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "resources": 251,
+  "requirements": 16,
+  "code_cells": 23,
+  "historical_prechecks": true,
+  "mixture_endpoints_exact": true,
+  "projections_recomputed": true,
+  "notebook_sha256": "cda5561db6e55be8c1d8fc9d5b348710c92653b0953d3008df0997352d127310"
+}
