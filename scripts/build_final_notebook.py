@@ -42,7 +42,8 @@ def build(overwrite=False):
         for p in sorted(paths):
             info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,10,27,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED
             z.writestr(info,p.read_bytes())
-        z.writestr('MANIFEST_EMBARQUE.json',json.dumps(manifest,sort_keys=True))
+        info=zipfile.ZipInfo('MANIFEST_EMBARQUE.json',(2026,10,27,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED
+        z.writestr(info,json.dumps(manifest,sort_keys=True))
     raw=payload.getvalue(); encoded=base64.b64encode(raw).decode()
     sha=hashlib.sha256(raw).hexdigest()
     # L'archive externe identique est pratique pour inspecter le contenu sans
@@ -113,7 +114,8 @@ def build(overwrite=False):
     import os, sys, time, importlib.util, subprocess
     from pathlib import Path
     DEBUT_EXECUTION = time.perf_counter()
-    MODE = os.environ.get("SMA_MODE", "rapide")  #@param ["rapide", "reentrainement"]
+    MODE = "rapide"  #@param ["rapide", "reentrainement"]
+    MODE = os.environ.get("SMA_MODE", MODE)  # Permet aussi la vérification automatique.
     assert MODE in ("rapide", "reentrainement")
     dependances = {"numpy":"numpy==2.3.5", "pandas":"pandas==2.3.3",
         "scipy":"scipy==1.16.3", "matplotlib":"matplotlib==3.10.8",
@@ -845,6 +847,29 @@ assert np.allclose(tirer_d3_visible(etat_demo,[400]),
     86 années. La référence linéaire en CO₂ peut rester proche sur 2001–2025
     tout en projetant beaucoup plus chaud à 946 ppm. Un meilleur CRPS historique
     ne suffit donc pas à choisir une loi de queue en 2100.
+
+    Une ablation est particulièrement lisible : avec le **même réseau D1**,
+    ajouter l'incertitude bootstrap de l'ancre donne D3. Sous SSP5-8.5, les
+    médianes Tmax de 2100 restent proches (32,61 °C pour D1 et 32,55 °C pour D3),
+    mais le risque simulé de dépasser 40 °C passe de 0,65 % à 3,01 %.
+    L'élargissement de la loi compte donc beaucoup plus pour cet événement que
+    le petit déplacement de sa médiane. Il ne prouve pas que le risque de D3
+    est exact : il montre ce qu'omet une ancre supposée connue.
+
+    H1 répond à une autre question : ses résidus sont recentrés et réduits avant
+    multiplication par sigma, de sorte que nous testons leur forme plutôt qu'un
+    gonflement arbitraire de leur échelle. H0 teste un mélange de prévisions
+    complètes. Les deux essais restent défavorables en validation face aux
+    meilleurs modèles seuls ; leurs résultats test ne servent pas à les régler.
+
+    Le contrôle des 75 années après réajustement complet révèle aussi un échec :
+    la GEV sous SSP5-8.5 produit **un tirage à 50,901 °C**, au-delà de la borne
+    du kit, parmi 750 000 tirages annuels de cette méthode et de ce scénario.
+    Nous le conservons. La GEV ajustée sur 1940–2000 avait passé le contrôle
+    historique ; cela ne garantissait pas le comportement après réajustement.
+    Une borne mathématique avec ξ négatif n'est pas une borne physique à 50 °C.
+    Les six ensembles complets D3/D1 retenus ne montrent aucune sortie de bornes,
+    sans que ce contrôle fini puisse prouver que leurs lois sont bornées.
     ''')
     code('tableau-sensibilites',r'''
     sensibilite=pd.read_csv(RESULTATS/"sensibilite_projections.csv")
@@ -852,6 +877,13 @@ assert np.allclose(tirer_d3_visible(etat_demo,[400]),
     tableau(risque[(risque.variable=="max")&(risque.scenario=="ssp5-8.5")][["model","p_2100","p_at_least_one"]])
     tableau(sensibilite[(sensibilite.variable=="max")&(sensibilite.scenario=="ssp5-8.5")&(sensibilite.year==2100)]
         [["model","q05_C","q50_C","q95_C","probability"]].rename(columns={"q05_C":"q05 (°C)","q50_C":"Médiane (°C)","q95_C":"q95 (°C)","probability":"P(>40 °C)"}))
+    controle_complet = (pd.read_csv(RESULTATS/"controle_projections_completes.csv")
+        if MODE=="rapide" else risque[["variable","model","scenario","minimum_C","maximum_C","outside_kit_bounds"]])
+    display(Markdown("**Sorties de bornes après réajustement : résultats conservés**"))
+    tableau(controle_complet[controle_complet.outside_kit_bounds>0].rename(columns={
+        "minimum_C":"Minimum simulé (°C)","maximum_C":"Maximum simulé (°C)","outside_kit_bounds":"Tirages hors bornes"}))
+    retenus=controle_complet[controle_complet.apply(lambda r:r.model==choix["selected"][r.variable],axis=1)]
+    assert (retenus.outside_kit_bounds==0).all()
     ''')
     md('discussion',r'''
     ### Discussion physique et statistique

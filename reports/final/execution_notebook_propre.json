@@ -1,12 +1,12 @@
 {
   "status": "completed",
   "mode": "rapide",
-  "seconds": 28.17268229997717,
+  "seconds": 17.338976600032765,
   "python": "3.12.10",
   "torch": "2.5.1+cpu",
   "numpy": "2.3.5",
-  "bundle_sha256": "ded9f41bf2323207ac1a854e0892298e801981859c3242d43dbb28b85764f31c",
-  "n_resources": 251,
+  "bundle_sha256": "e9771c8a817bc34f46343942afd8dbaf2f179a1ae26f04414a2ff912a72c3b6e",
+  "n_resources": 252,
   "heatwaves": 421,
   "score_max": 1.6499912837950195,
   "score_min": 1.0360559635724065,
@@ -15,15 +15,14 @@
     "min": "D1"
   },
   "projection_rows": 450,
-  "working_directory": "C:\\Users\\edlas\\AppData\\Local\\Temp\\sma_clean_execution_9l8fti7l",
-  "fresh_resources_directory": "C:\\Users\\edlas\\AppData\\Local\\Temp\\sma_brest_dzu4fvo9",
+  "working_directory": "C:\\Users\\edlas\\AppData\\Local\\Temp\\sma_clean_execution_azy8mttw",
+  "fresh_resources_directory": "C:\\Users\\edlas\\AppData\\Local\\Temp\\sma_brest_cetie99x",
   "test_previously_consulted": true,
-  "execution_seconds": 30.58809440000914,
+  "execution_seconds": 19.065226100035943,
   "code_cells": 23,
   "markdown_cells": 24,
   "executable": "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\final_clean_venv\\Scripts\\python.exe",
   "empty_initial_directory": true,
   "cleared_initial_outputs": true,
-  "executed_notebook_sha256": "cda5561db6e55be8c1d8fc9d5b348710c92653b0953d3008df0997352d127310",
-  "checksum_convention": "SHA-256 des octets du fichier exécuté, fins de ligne Windows incluses"
+  "executed_notebook_sha256": "264e4ce68eaa6dfeccdadaedf1a34cb99737856054866ca25cfc73817bc220bf"
 }

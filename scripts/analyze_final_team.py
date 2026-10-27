@@ -250,6 +250,14 @@ reconstruit les familles et validations dans un autre dossier. Son résultat ne
 remplace pas les résultats remis ; des versions ou matériels différents peuvent
 modifier un arrêt précoce et de très faibles écarts de sélection.
 '''
+    controle_complet=OUT/'controle_projections_completes.csv'
+    if controle_complet.exists():
+        hors_bornes=pd.read_csv(controle_complet).query('outside_kit_bounds > 0')
+        report+='\n## Contrôle après réajustement complet\n\n'+table(hors_bornes)+'\n\n'
+        report+=("La GEV SSP5-8.5 comporte un tirage à 50,901 °C parmi 750 000 tirages annuels. "
+                 "Il est conservé. Le contrôle historique sur 1940–2000 ne garantissait pas le comportement "
+                 "après réajustement sur 1940–2025. Une borne GEV par composante n'est pas une borne physique à 50 °C. "
+                 "Les ensembles complets D3/D1 retenus ne montrent aucune sortie de bornes.\n")
     (ROOT/'reports/experiences_complementaires.md').write_text(report,encoding='utf-8')
     write_json(OUT/'analyse_execution.json',dict(status='completed',seconds=time.perf_counter()-tick,heatwaves=heat,
                   reused_networks=int(costs.reused_historical.sum()),new_networks=int((~costs.reused_historical).sum())))

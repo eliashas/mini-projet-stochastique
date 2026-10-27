@@ -1,0 +1,20 @@
+{
+  "status": "completed",
+  "wall_seconds": 2434.9122650999925,
+  "selected": {
+    "max": "D3",
+    "min": "D1"
+  },
+  "score_max": 1.6499912837950195,
+  "score_min": 1.0360559635724065,
+  "selection_sha256": "7eeb969c0b005b11a394509226ca7915b7af8afd9012979c9aa246cb0b505baf",
+  "python": "3.12.10",
+  "numpy": "2.3.5",
+  "pandas": "2.3.3",
+  "torch": "2.5.1+cu121",
+  "gpu": "NVIDIA GeForce GTX 1660 Ti",
+  "configuration_sha256": "16a645ab4d26ab21e2cce277698696262a76bf1cbaf82d6cf5b25e4b336600a9",
+  "test_previously_consulted": true,
+  "predictions_sha256": "49a53315832215703543cfbf52818b8b0dbc5d7723803dcd4925a60ad842f21f",
+  "retrain": true
+}

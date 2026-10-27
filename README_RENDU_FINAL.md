@@ -16,14 +16,15 @@ Dans Colab ou Jupyter, laisser `MODE="rapide"`, puis redémarrer le noyau et
 exécuter toutes les cellules. Les dépendances absentes sont installées
 explicitement. L'archive embarquée est vérifiée par SHA-256, décompressée dans
 un dossier temporaire neuf, puis les calculs essentiels sont exécutés.
+Ce mode fonctionne sur CPU, sans activer de GPU.
 Les tableaux de la grande matrice sont rechargés ; les vagues, les prévisions
 de la sélection, le benchmark original et les projections sont recalculés.
 Un petit entraînement pédagogique de 250 pas est aussi exécuté.
 
 Vérification mesurée : environnement virtuel Python 3.12.10 neuf, PyTorch
 2.5.1 CPU, seul notebook copié dans un dossier vide, sorties effacées avant
-exécution ; 23 cellules de code terminées sans erreur en **21 à 30 s** lors des
-deux vérifications, selon la charge de la machine.
+exécution ; 23 cellules de code terminées sans erreur en **19 à 31 s** lors des
+vérifications, selon la charge de la machine.
 Les preuves détaillées sont sous `reports/final/execution_notebook_propre.json`.
 L'installation initiale des bibliothèques n'est pas incluse dans ce temps.
 
@@ -97,3 +98,17 @@ pas de contribution au moment de l'intégration ; aucun apport n'est inventé.
 Après relecture humaine du notebook maître, l'éditer directement. Le script de
 construction refuse de le remplacer sans `--overwrite` et ne doit pas servir
 à écraser les corrections de l'équipe.
+
+## Vérification intégrale du réentraînement
+
+Le second parcours a été exécuté jusqu'au bout dans un noyau neuf : 90 réseaux
+réentraînés depuis zéro, modèles statistiques, validations, test et projections.
+Durée du notebook : **41,2 min** sur GTX 1660 Ti. Les 90 jeux de poids et tous
+les résultats numériques comparés sont identiques à la référence remise.
+Les preuves et le détail des coûts sont sous `reports/final/`.
+
+Un contrôle plus large, après réajustement complet, conserve aussi un échec :
+la GEV sous SSP5-8.5 génère un tirage à **50,901 °C** parmi 750 000 tirages
+annuels. Le notebook le signale. D3/D1 ne présente aucune sortie des bornes
+dans les six ensembles complets vérifiés ; le contrôle reste fini et ne
+garantit pas le support physique de toute la loi.

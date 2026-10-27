@@ -57,3 +57,10 @@ embarque réellement ses ressources. Il a été exécuté, sorties initiales
 effacées, dans un environnement virtuel neuf et un dossier vide. Le mode
 réentraînement est fourni séparément du mode rapide, avec code essentiel
 visible, équations et interprétations en français.
+
+Le réentraînement intégral a ensuite été exécuté jusqu'au bout (90 réseaux,
+41,2 min sur GTX 1660 Ti) et retrouve exactement les résultats remis.
+Le contrôle des 75 années réajustées révèle un membre GEV à 50,901 °C sous
+SSP5-8.5 ; il reste dans les résultats et souligne que la borne GEV n'est
+pas une borne physique à 50 °C. Aucun membre D3/D1 retenu ne sort des bornes
+dans les ensembles complets vérifiés.

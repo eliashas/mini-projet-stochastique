@@ -116,3 +116,17 @@ les métriques de la sélection et les figures essentielles. Le mode réentraîn
 reconstruit les familles et validations dans un autre dossier. Son résultat ne
 remplace pas les résultats remis ; des versions ou matériels différents peuvent
 modifier un arrêt précoce et de très faibles écarts de sélection.
+
+## Contrôle supplémentaire après réajustement complet
+
+Le réentraînement intégral confirme exactement les résultats de référence
+(90 réseaux, poids identiques). Les tirages des 75 années ont aussi été
+contrôlés après l'ajustement 1940–2025. La GEV sous SSP5-8.5 produit **un
+tirage à 50,901 °C**, parmi 750 000 tirages annuels de cette méthode et de ce
+scénario, donc au-delà du garde-fou de 50 °C. Il est conservé et comptabilisé.
+Le contrôle historique de la GEV ajustée sur 1940–2000 était admissible : il
+ne garantissait pas la conformité du modèle réajusté sur une autre période.
+Une forme négative donne une borne mathématique par composante, pas une borne
+physique assurée à 50 °C. Les tirages D3/D1 retenus restent dans les bornes sur
+les six ensembles complets vérifiés ; cela ne prouve pas que toute leur loi
+est bornée. Le tableau détaillé est `controle_projections_completes.csv`.

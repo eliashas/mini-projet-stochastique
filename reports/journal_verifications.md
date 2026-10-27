@@ -70,3 +70,34 @@
 Les preuves JSON d'exécution, versions, durées et empreintes sont conservées
 dans `reports/final/`. La vérification finale du clone distant complète ce
 journal après le push sans force.
+
+## Vérification du paquet Git
+
+Un clone local isolé a été comparé octet par octet aux 251 ressources du
+manifeste. Une conversion automatique CRLF de `requirements-final.txt` a été
+repérée puis corrigée par `.gitattributes`. Les données et états archivés
+conservent leurs octets originaux ; les sources Python et les dépendances
+utilisent LF. Les espaces des SVG et archives générés ne sont pas traités
+comme des erreurs de code. Le contrôle `git diff --check` du code passe.
+
+## Réentraînement intégral et dernière anomalie conservée
+
+Le notebook en mode réentraînement termine ses 23 cellules en 2 472 s environ
+(41,2 min), avec 90 réseaux réappris depuis zéro. Leurs poids sont tous
+identiques aux états remis. Les tables de validation, test, projections,
+sensibilités et probabilités comparées ne présentent aucune différence numérique.
+La sélection et les scores du kit sont exactement retrouvés.
+
+Le contrôle étendu aux 75 années après réajustement complet trouve un tirage
+GEV SSP5-8.5 à 50,901 °C, parmi 750 000 tirages de cette méthode/scénario.
+Il est conservé et présenté. La GEV historique avait passé les contrôles ;
+cette réussite ne garantissait pas le modèle réajusté. Les six ensembles
+D3/D1 retenus sont conformes aux bornes sur les tirages vérifiés.
+
+Le tableau `reentrainement_90_reseaux.csv` trace les entraînements et
+`controle_toutes_projections_reentrainees.csv` conserve les extrêmes mesurés.
+
+Le paquet final contient 252 ressources embarquées : la base expérimentale
+initiale et le diagnostic des projections complètes. La dernière exécution
+propre du notebook maître, incluant cet échec, termine en 19 s environ sur
+CPU. Les 16 exigences de la matrice sont contrôlées.

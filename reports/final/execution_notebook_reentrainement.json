@@ -1,0 +1,65 @@
+{
+  "status": "completed",
+  "mode": "reentrainement",
+  "seconds": 2468.679580199998,
+  "python": "3.12.10",
+  "torch": "2.5.1+cu121",
+  "numpy": "2.3.5",
+  "bundle_sha256": "0fcddbd7ad8c6d7f487fe416e95518d3a7eaa0f533f01a5a819f094838ccecc1",
+  "n_resources": 251,
+  "heatwaves": 421,
+  "score_max": 1.6499912837950195,
+  "score_min": 1.0360559635724065,
+  "selection": {
+    "max": "D3",
+    "min": "D1"
+  },
+  "projection_rows": 450,
+  "working_directory": "C:\\Users\\edlas\\AppData\\Local\\Temp\\sma_clean_execution_qieh8ack",
+  "fresh_resources_directory": "C:\\Users\\edlas\\AppData\\Local\\Temp\\sma_brest_mnypm5ns",
+  "test_previously_consulted": true,
+  "execution_seconds": 2472.089182499971,
+  "code_cells": 23,
+  "markdown_cells": 24,
+  "executable": "C:\\Users\\edlas\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "empty_initial_directory": true,
+  "cleared_initial_outputs": true,
+  "executed_notebook_sha256": "f474e80a532ece2c4535e774686ac5a906a24501e048feebf3007efb6fc072a1",
+  "comparison_tables": [
+    {
+      "table": "validation",
+      "rows": 40,
+      "maximum_absolute_difference": 0.0
+    },
+    {
+      "table": "test",
+      "rows": 40,
+      "maximum_absolute_difference": 0.0
+    },
+    {
+      "table": "projections",
+      "rows": 450,
+      "maximum_absolute_difference": 0.0
+    },
+    {
+      "table": "sensibilite_projections",
+      "rows": 2700,
+      "maximum_absolute_difference": 0.0
+    },
+    {
+      "table": "probabilites",
+      "rows": 36,
+      "maximum_absolute_difference": 0.0
+    }
+  ],
+  "networks_retrained_from_scratch": 90,
+  "networks_with_identical_weights": 90,
+  "note_version": "Code expérimental et données inchangés ; présentation et script de rapport enrichis après découverte du tirage GEV à 50,901 °C. Les 90 poids et les résultats numériques concordent exactement.",
+  "experimental_code_and_data_match_final": true,
+  "report_helper_updated_after_run": [
+    "scripts/analyze_final_team.py"
+  ],
+  "additional_diagnostic_resources": [
+    "rendu_final/resultats/controle_projections_completes.csv"
+  ]
+}
