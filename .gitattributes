@@ -4,3 +4,4 @@
 /reports/final/*.json -text -whitespace
 /reports/final/*.svg -whitespace
 *.py text eol=lf
+/requirements-final.txt text eol=lf
