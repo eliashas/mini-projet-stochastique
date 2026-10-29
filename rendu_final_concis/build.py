@@ -206,6 +206,27 @@ Attention, « meilleur » veut dire ici meilleur CRPS sur 2001-2025, pas meilleu
 toute la loi, mais surtout son centre : il dit peu de chose sur la queue de la loi, qui compte pour la question des
 40 °C, et 25 années de test, c'est peu. C'est donc le critère qui nous paraît le plus raisonnable pour choisir, mais
 d'autres choix restaient défendables (par exemple la GEV, faite pour les extrêmes, et très proche pour Tmin).
+
+**Ce que donnent les méthodes en 2100.** Pour vérifier ce choix autrement qu'avec le CRPS, on a aussi regardé ce que
+chaque méthode prédit pour Tmax en 2100 avec SSP5-8.5 (946 ppm), une fois réentraînée sur 1940-2025 :
+
+| Méthode | Médiane (°C) | Intervalle 5-95 % (°C) | P(au moins une année > 40 °C, 2026-2100) | Problème |
+|:--|:-:|:-:|:-:|:--|
+| **Régression bayésienne** | 32,8 | 27,4 – 38,2 | 7,8 % | — |
+| GEV (Reda) | 31,4 | 26,2 – 37,1 | 7,9 % | — |
+| Générateur (Elias) | 32,6 | 29,8 – 37,0 | 4,6 % | — |
+| Référence | 32,8 | 29,2 – 36,4 | 0,4 % | trop sûre d'elle : une seule pente |
+| Régression quantile (Yazid) | 31,7 | 26,6 – 44,0 | 88 % | les 99 droites s'écartent |
+| Réseau à mélange (Diae) | 29,1 | 23,8 – 34,7 | 2,7 % | ne suit plus le CO2 |
+
+Trois méthodes posent problème quand on extrapole. La régression quantile diverge : ses 99 droites ont des pentes
+différentes et s'écartent loin des données, ce qui donne un quantile 95 % à 44 °C en 2100 (et des Tmin jusqu'à
+−19 °C, bien en dessous du record de −6,6 °C). Le réseau de Diae sature : sa médiane reste bloquée vers 29 °C dès
+2050, alors que le CO2 continue d'augmenter, car un réseau de neurones ne sait pas extrapoler en dehors de ce qu'il a
+vu. Et le DDPM d'Elias donnait des valeurs absurdes pour Tmin. La référence, elle, ne diverge pas, mais elle est trop
+confiante : avec une seule pente, elle donne 0,4 % au lieu de 7,8 %. La GEV et le générateur d'Elias restent
+plausibles, et leurs probabilités encadrent la nôtre. Le choix de la régression bayésienne est donc cohérent avec ce
+qu'on observe en 2100, pas seulement avec le CRPS.
 C'est la régression bayésienne qu'on développe dans la suite.
 
 Une fois la méthode choisie, on la **réentraîne sur toutes les années 1940-2025** pour faire les prédictions jusqu'en
