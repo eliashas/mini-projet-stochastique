@@ -226,8 +226,10 @@ Les modèles de diffusion d'Elias et la GEV donnent des projections proches de l
 Trois méthodes posent en revanche problème quand on extrapole. La régression quantile diverge : ses 99 droites ont
 des pentes différentes et s'écartent loin des données, ce qui donne un quantile 95 % à 44 °C en 2100, 88 % de
 chances de dépasser 40 °C au moins une fois d'ici 2100, et des Tmin jusqu'à −19 °C (le record est de −6,6 °C). Le
-réseau de Diae sature : sa médiane reste bloquée vers 29 °C dès 2050, alors que le CO2 continue d'augmenter, car un
-réseau de neurones ne sait pas extrapoler en dehors de ce qu'il a vu. Le DDPM d'Elias donnait, lui, des valeurs
+réseau de Diae sature : sa médiane reste bloquée vers 29 °C dès 2050, alors que le CO2 continue d'augmenter. Son
+entrée est le $\ln(\mathrm{CO_2})$ centré-réduit, qui va de −1,7 à 1,8 sur 1940-2025 mais vaut 10,3 en 2100 avec
+SSP5-8.5, et ses neurones utilisent $\tanh$, qui devient constante pour les grandes valeurs ($\tanh(4) \approx 0{,}999$).
+Le réseau généralise bien entre les valeurs qu'il a vues, mais pas aussi loin au-delà. Le DDPM d'Elias donnait, lui, des valeurs
 absurdes pour Tmin. Enfin, la référence ne diverge pas, mais elle est trop confiante : avec une seule pente, elle
 donne 0,01 % au lieu de 1,5 %. Le choix de la régression bayésienne est donc cohérent avec ce que les méthodes
 prédisent pour 2100, et pas seulement avec le CRPS.
