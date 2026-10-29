@@ -346,7 +346,7 @@ def tracer(var, sims, seuil):
     plt.axhline(seuil, color='grey', ls='--', lw=1)
     plt.xlabel('Année')
     plt.ylabel(f'T{var} annuelle (°C)')
-    plt.title(f'Projections de la T{var} annuelle à Brest')
+    plt.title(f'Projections de la T{var} annuelle à Brest (régression bayésienne)')
     plt.legend(loc='upper left', fontsize=8)
     plt.show()
 
@@ -372,10 +372,16 @@ for s, couleur in SSP.items():
 plt.axvline(40, color='grey', ls='--', label='40 °C')
 plt.xlabel('Tmax annuelle en 2100 (°C)')
 plt.ylabel('Densité de probabilité (1/°C)')
-plt.title('Loi de la Tmax en 2100 (10 000 tirages)')
+plt.title('Loi de la Tmax en 2100 (régression bayésienne, 10 000 tirages)')
 plt.legend()
 plt.show()
+print('Régression bayésienne :')
 print(resume_2100(sims_max, 40).round(4).to_string())
+
+# même calcul avec la diffusion, pour comparer
+sims_diffusion = {s: tirer_diffusion(diffusion_max, np.log(futur[s].to_numpy())) for s in SSP}
+print('\nDiffusion :')
+print(resume_2100(sims_diffusion, 40).round(4).to_string())
 '''
 
 DIFFUSION_MD = r"""
@@ -461,9 +467,16 @@ for var in ['max', 'min']:
     print(f'Diffusion, CRPS T{var} 2001-2025 : {crps(tirer_diffusion(m, x[apres]), y[var].to_numpy()[apres]):.2f} °C')
 
 # Tmax en 2100 avec SSP5-8.5, après réentraînement sur 1940-2025
-m = entrainer_diffusion(x, y['max'].to_numpy(), PAS['max'])
-t2100 = tirer_diffusion(m, np.log(yearly_future_co2['ssp5-8.5'].to_numpy()))[:, -1]
-print(f'Tmax 2100 (SSP5-8.5) : médiane {np.median(t2100):.1f} °C, P(> 40 °C) = {np.mean(t2100 > 40):.1%}')
+# modèle réentraîné sur 1940-2025, utilisé à la question suivante pour les projections
+diffusion_max = entrainer_diffusion(x, y['max'].to_numpy(), PAS['max'])
+"""
+
+PROJ_MD = r"""
+## Projections jusqu'en 2100 avec la régression bayésienne
+
+On revient à la méthode retenue. La régression bayésienne est réentraînée sur toutes les années 1940-2025, puis on
+tire 10 000 températures pour chaque année de 2026 à 2100 et chaque scénario. Le graphique montre la médiane (trait)
+et l'intervalle 5-95 % (bande) des tirages.
 """
 
 MINIMA = r'''
@@ -488,7 +501,7 @@ for s, couleur in SSP.items():
 plt.axvline(0, color='grey', ls='--', label='0 °C')
 plt.xlabel('Tmin annuelle en 2100 (°C)')
 plt.ylabel('Densité de probabilité (1/°C)')
-plt.title('Loi de la Tmin en 2100 (10 000 tirages)')
+plt.title('Loi de la Tmin en 2100 (régression bayésienne, 10 000 tirages)')
 plt.legend()
 plt.show()
 print(resume_2100(sims_min, 0, au_dessus=False).round(3).to_string())
@@ -503,7 +516,7 @@ todo = iter([
     [code(TMAX), com('tmax')],
     [code(CORREL), com('correl')],
     [md(METHODE), code(MODELES), code(COMPARAISON), com('comparaison'),
-     md(DIFFUSION_MD), code(DIFFUSION), com('diffusion'), code(PROJ), com('proj')],
+     md(DIFFUSION_MD), code(DIFFUSION), com('diffusion'), md(PROJ_MD), code(PROJ), com('proj')],
     [code(DIST), com('dist')],
     [code(MINIMA), com('minima'), com('conclusion')],
 ])

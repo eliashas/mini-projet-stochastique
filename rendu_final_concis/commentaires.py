@@ -104,17 +104,25 @@ beaucoup d'une année à l'autre, et l'incertitude sur la pente compte de plus e
 '''
 
 C['dist'] = r'''
-**Réponse.** Probabilité de dépasser 40 °C à Brest :
+<div style="border: 3px solid #c0392b; border-radius: 8px; padding: 10px 16px; margin: 8px 0;">
 
-| Scénario | Médiane 2100 | P(Tmax 2100 > 40 °C) | P(au moins une année > 40 °C entre 2026 et 2100) |
-|---|---|---|---|
+**Réponse : probabilité de dépasser 40 °C à Brest (régression bayésienne)**
+
+| Scénario | Médiane de Tmax en 2100 | P(Tmax 2100 > 40 °C) | P(au moins une année > 40 °C entre 2026 et 2100) |
+|:--|:-:|:-:|:-:|
 | SSP1-2.6 | 26,5 °C | ≈ 0 | ≈ 0 |
 | SSP2-4.5 | 28,5 °C | ≈ 0 | ≈ 0 |
-| SSP5-8.5 | 32,8 °C | 1,5 % | 7,8 % |
+| SSP5-8.5 | 32,8 °C | **1,5 %** | **7,8 %** |
+
+</div>
 
 **Commentaire.** Dépasser 40 °C reste rare pour une année donnée, même en 2100 avec SSP5-8.5 (1,5 %). Sur 75 ans, le
 risque s'accumule : dans ce scénario, environ 1 trajectoire sur 13 dépasse 40 °C au moins une fois. Avec 10 000
 tirages, « 0 » veut seulement dire moins d'environ 1 chance sur 10 000, pas que c'est impossible.
+
+La diffusion donne des médianes très proches (26,2 / 28,3 / 32,7 °C), mais une queue un peu plus longue du côté chaud :
+2,9 % en 2100 et 17 % au moins une fois d'ici 2100 avec SSP5-8.5. L'ordre de grandeur est le même : quelques pour cent
+pour une année, et de l'ordre de 10 % sur 75 ans dans le pire scénario.
 
 Il faut prendre ces chiffres avec prudence : 40 °C est loin de tout ce qu'on a observé (34,2 °C au maximum), et on
 extrapole jusqu'à 946 ppm alors qu'on n'a vu que 310 à 428 ppm. Le CO2 est aussi la seule entrée du modèle.
@@ -124,6 +132,18 @@ C['minima'] = r'''
 **Approche.** On refait la même étude avec la même régression bayésienne : sur le test 2001-2025, elle a aussi
 le meilleur CRPS pour Tmin (0,98 °C), pratiquement à égalité avec la GEV et la diffusion d'Elias (voir la question 3). Le prof ne donne pas de seuil pour Tmin :
 on prend **0 °C**, le seuil du gel. Sur 1940-2025, le minimum annuel a été négatif 52 années sur 86.
+
+<div style="border: 3px solid #c0392b; border-radius: 8px; padding: 10px 16px; margin: 8px 0;">
+
+**Réponse : probabilité que le minimum annuel soit sous 0 °C (régression bayésienne)**
+
+| Scénario | Médiane de Tmin en 2100 | P(Tmin 2100 < 0 °C) | P(au moins une année < 0 °C entre 2026 et 2100) |
+|:--|:-:|:-:|:-:|
+| SSP1-2.6 | −0,4 °C | **58 %** | 100 % |
+| SSP2-4.5 | 0,5 °C | **39 %** | 100 % |
+| SSP5-8.5 | 2,5 °C | **17 %** | 100 % |
+
+</div>
 
 **Commentaire.** Tmin varie de −6,6 °C (1987) à 2,6 °C (2019). Contrairement à Tmax, la moyenne sur 11 ans ne montre
 pas de tendance nette jusqu'en 2000 : la moyenne vaut −0,7 °C sur 1940-1979 comme sur 1980-2025, avec des hivers très
