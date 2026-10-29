@@ -13,38 +13,46 @@ The five students are:
 '''
 
 C['saison'] = r'''
-On a enlevé les 29 février pour avoir 365 jours chaque année. Le lissage est circulaire : pour lisser début janvier,
-on utilise aussi fin décembre, puisque le cycle se répète d'une année à l'autre.
+**Commentaire.** Les trois courbes ont la même forme. La température est la plus basse vers le 19 février (quantile 50 %
+à 7,8 °C) et la plus haute vers le 7 août (16,5 °C), donc environ 9 °C d'écart seulement entre l'hiver et l'été.
 
-**Commentaire.** Le cycle est régulier : le creux est vers le 19 février (médiane 7,8 °C) et le pic vers le 7 août
-(16,5 °C). L'amplitude est faible (environ 9 °C) et le maximum arrive bien après le solstice : c'est typique d'un climat
-océanique, l'Atlantique se réchauffe lentement en été et rend sa chaleur en hiver. L'écart entre les quantiles 10 % et
-90 % est plus grand en hiver (jusqu'à 7,5 °C en janvier) qu'en été (3,4 °C début août) : l'hiver dépend beaucoup de la direction du
-vent (air océanique doux ou air continental froid). La courbe à 90 % sert de seuil pour les vagues de chaleur.
+On pourrait s'attendre à ce que les jours les plus chauds soient autour du 21 juin, le jour où il y a le plus de soleil.
+Pourtant le pic arrive vers le 7 août, environ 7 semaines plus tard, et le creux vers le 19 février au lieu du
+21 décembre. On pense que c'est dû à la mer autour de Brest : elle se réchauffe et se refroidit lentement, donc l'air
+suit le soleil avec du retard.
+
+L'écart entre les quantiles 10 % et 90 % (entre la courbe bleue et la rouge) change selon la saison : environ 7,5 °C vers
+le 10 janvier contre 3,4 °C fin juillet. Un même jour d'hiver peut donc être très doux ou très froid selon les années,
+alors qu'en été les températures varient moins. La courbe à 90 % servira de seuil pour les vagues de chaleur.
 '''
 
 C['vagues'] = r'''
 Un jour $d$ est **chaud** si $T_d>q_{90}(j_d)$, où $q_{90}(j)$ est le quantile 90 % lissé du jour de l'année $j$.
-Une **vague de chaleur** est une suite d'au moins 3 jours chauds consécutifs (on suit l'idée de « plusieurs jours »
-du cours ; avec 1 jour, n'importe quel jour un peu chaud compterait). Pour une vague $W$ :
+Une **vague de chaleur** est une suite de jours chauds consécutifs. Le sujet parle de « plusieurs jours », on a choisi
+d'en garder au moins 3. Pour une vague $W$ :
 
 $$\text{durée}=|W|\ \text{jours},\qquad \text{intensité}=\frac1{|W|}\sum_{d\in W}\big(T_d-q_{50}(j_d)\big)\ \text{en °C}.$$
 
-**Commentaire.** On trouve 421 vagues en 86 ans, environ 5 par an. Les plus longues durent 14 jours (août 1955 et août
-1976, l'été de la grande sécheresse). La plus intense est celle de **juillet 2022** (+7,7 °C par rapport à la normale
-pendant 3 jours). Comme le seuil dépend de la saison, on détecte aussi des épisodes doux hors été (10 jours en avril
-1945) : ils sont chauds pour la saison, pas en absolu.
+L'intensité dit donc de combien de degrés la vague est, en moyenne, au-dessus de la normale de la date (le quantile 50 %).
+
+**Commentaire.** On trouve 421 vagues en 86 ans, soit environ 5 par an. Les plus longues durent 14 jours (août 1955 et
+août 1976). La plus intense est celle de **juillet 2022** : pendant 3 jours, il a fait en moyenne 7,7 °C de plus que la
+normale pour cette date.
+
+Une vague n'est pas forcément en été. Le seuil (le quantile 90 %) change avec la date : environ 11 °C en janvier et
+18,5 °C en août. Par exemple, du 11 au 20 avril 1945, il a fait entre 12,6 et 17,4 °C pendant 10 jours : c'est très chaud
+pour un mois d'avril, alors qu'en août ce seraient des jours plutôt frais.
 '''
 
 C['nuage'] = r'''
-**Commentaire.** La plupart des vagues durent 3 à 5 jours avec une intensité de 2,5 à 5 °C. Il n'y a pas vraiment de
-lien entre durée et intensité : les vagues les plus intenses sont souvent courtes. Les points jaunes (années récentes)
-sont nombreux en haut à gauche : les épisodes courts et très chauds sont surtout récents.
+**Commentaire.** La plupart des vagues sont courtes : environ 8 sur 10 durent 3 à 5 jours, et presque toutes ont une
+intensité entre 2,5 et 5 °C. Le lien entre durée et intensité est faible : une vague longue n'est pas forcément plus
+intense. Les vagues les plus intenses (plus de 5 °C) sont réparties sur toute la période, on ne voit pas de tendance
+nette sur l'intensité.
 
-Le signal le plus net est la fréquence (à droite, ramenée au nombre d'années de chaque décennie, car 2020 n'en compte
-que 6) : environ 3 vagues par an dans les années 1960-1970, 6 dans les années 2000, et 12 par an sur 2020-2025.
-Attention, le seuil est calculé sur toute la période 1940-2025 : dans un climat qui se réchauffe, il est un peu bas
-pour les années récentes, ce qui donne plus de vagues à la fin. C'est justement le réchauffement qu'on observe ici.
+Ce qui change vraiment, c'est le nombre de vagues (deuxième graphique) : environ 3 par an dans les années 1960-1970,
+6 dans les années 2000, et 12 par an sur 2020-2025. Le seuil de 90 % est le même pour toutes les années, donc s'il y a
+plus de vagues aujourd'hui, c'est que les températures ont augmenté.
 '''
 
 C['tmax'] = r'''

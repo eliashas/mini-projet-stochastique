@@ -17,78 +17,89 @@ com = lambda k: md(C.get(k, f'_(commentaire à écrire : {k})_'))
 
 IMPORTS = r'''
 %matplotlib inline
-import urllib.request
-from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch
 from sklearn.linear_model import QuantileRegressor
 
-# Si les CSV ne sont pas à côté du notebook (Colab par exemple), on les télécharge depuis notre dépôt
-URL = 'https://raw.githubusercontent.com/eliashas/mini-projet-stochastique/final/rendu_final_concis/'
-for f in ['daily_temp_brest.csv', 'yearly_temp_brest.csv', 'yearly_future_co2.csv']:
-    if not Path(f).exists():
-        urllib.request.urlretrieve(URL + f, f)
-
-rng = np.random.default_rng(0)   # graines fixées : mêmes résultats à chaque exécution
+rng = np.random.default_rng(0)   # graine fixée pour retrouver les mêmes résultats
 torch.manual_seed(0)
 plt.rcParams.update({'figure.figsize': (11, 4), 'axes.grid': True, 'grid.alpha': .3})
 '''
 
 # ------------------------------------------------------------------ partie 1
 SAISON = r'''
-d = daily_temp_brest.assign(date=pd.to_datetime(daily_temp_brest.valid_time))
-d = d[~((d.date.dt.month == 2) & (d.date.dt.day == 29))].copy()   # on enlève les 29 février : 365 jours par an
-d['jour'] = d.groupby(d.date.dt.year).cumcount() + 1
+# on enlève les 29 février pour avoir 365 jours chaque année
+d = daily_temp_brest.copy()
+d['date'] = pd.to_datetime(d['valid_time'])
+d = d[d['date'].dt.strftime('%m-%d') != '02-29']
+d['jour'] = d.groupby(d['date'].dt.year).cumcount() + 1   # numéro du jour dans l'année (1 à 365)
 
-q = d.groupby('jour')['mean'].quantile([.1, .5, .9]).unstack()
-q.columns = ['q10', 'q50', 'q90']
-# moyenne glissante sur 31 jours, circulaire (le 31 décembre est suivi du 1er janvier)
-lisse = lambda s: pd.concat([s.iloc[-15:], s, s.iloc[:15]]).rolling(31, center=True).mean().iloc[15:-15]
-qs = q.apply(lisse)
+# quantiles 10 %, 50 % et 90 % de la température pour chaque jour de l'année
+q = pd.DataFrame({'q10': d.groupby('jour')['mean'].quantile(0.1),
+                  'q50': d.groupby('jour')['mean'].quantile(0.5),
+                  'q90': d.groupby('jour')['mean'].quantile(0.9)})
 
-fig, ax = plt.subplots()
-for c, col in zip(qs, ['tab:blue', 'k', 'tab:red']):
-    ax.plot(q.index, q[c], color=col, lw=.6, alpha=.35)
-    ax.plot(qs.index, qs[c], color=col, lw=2, label=f'quantile {c[1:]} % (lissé)')
-ax.set(xlabel='Jour de l\'année', ylabel='Température moyenne journalière (°C)', xlim=(1, 365),
-       title='Cycle saisonnier à Brest (ERA5, 1940-2025)')
-ax.legend()
+# moyenne glissante sur 31 jours ; comme l'année est un cycle, on colle fin décembre
+# avant janvier et début janvier après décembre pour lisser aussi les bords
+q_etendu = pd.concat([q.tail(15), q, q.head(15)])
+qs = q_etendu.rolling(31, center=True).mean().iloc[15:-15]
+
+# en fin : quantiles bruts ; en épais : quantiles lissés
+for nom, couleur in [('q10', 'tab:blue'), ('q50', 'black'), ('q90', 'tab:red')]:
+    plt.plot(q[nom], color=couleur, lw=0.6, alpha=0.35)
+    plt.plot(qs[nom], color=couleur, lw=2, label=f'quantile {nom[1:]} % (lissé)')
+plt.xlim(1, 365)
+plt.xticks([1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335],
+           ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'])
+plt.yticks(range(2, 21))   # une graduation par °C pour lire les écarts entre courbes
+plt.xlabel("Jour de l'année")
+plt.ylabel('Température moyenne journalière (°C)')
+plt.title('Cycle saisonnier à Brest (ERA5, 1940-2025)')
+plt.legend()
 plt.show()
-print(qs.agg(['min', 'idxmin', 'max', 'idxmax']).round(1))
 '''
 
 VAGUES = r'''
-DUREE_MIN = 3   # une vague = au moins 3 jours chauds consécutifs
+DUREE_MIN = 3   # on garde les vagues d'au moins 3 jours chauds consécutifs
 
-d = d.join(qs, on='jour')
-d['chaud'] = d['mean'] > d.q90                    # jour plus chaud que le quantile 90 % de son jour de l'année
-d['anomalie'] = d['mean'] - d.q50                 # écart à la médiane du jour (°C)
-d['bloc'] = (d.chaud != d.chaud.shift()).cumsum()  # même numéro pour des jours consécutifs de même statut
+d = d.join(qs, on='jour')                # on ajoute à chaque jour les quantiles lissés de sa date
+d['chaud'] = d['mean'] > d['q90']        # jour plus chaud que le quantile 90 % de sa date
+d['anomalie'] = d['mean'] - d['q50']     # écart au quantile 50 % de sa date (°C)
 
-vagues = (d[d.chaud].groupby('bloc')
-          .agg(debut=('date', 'first'), duree=('chaud', 'size'), intensite=('anomalie', 'mean'))
-          .query('duree >= @DUREE_MIN')
-          .assign(annee=lambda v: v.debut.dt.year)
-          .reset_index(drop=True))
+# on numérote les suites de jours consécutifs : le numéro change à chaque passage chaud <-> pas chaud
+d['suite'] = (d['chaud'] != d['chaud'].shift()).cumsum()
 
-print(f'{len(vagues)} vagues de chaleur de 1940 à 2025')
+# chaque suite de jours chauds est une vague : durée = nombre de jours, intensité = anomalie moyenne
+vagues = d[d['chaud']].groupby('suite').agg(debut=('date', 'first'),
+                                            duree=('chaud', 'size'),
+                                            intensite=('anomalie', 'mean'))
+vagues = vagues[vagues['duree'] >= DUREE_MIN]
+vagues['annee'] = vagues['debut'].dt.year
+
+print(len(vagues), 'vagues de chaleur de 1940 à 2025')
 print('\nLes plus longues :\n', vagues.nlargest(4, 'duree').round({'intensite': 2}).to_string(index=False))
 print('\nLes plus intenses :\n', vagues.nlargest(4, 'intensite').round({'intensite': 2}).to_string(index=False))
 '''
 
 NUAGE = r'''
-fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 4.5), gridspec_kw={'width_ratios': [1.6, 1]})
-sc = a1.scatter(vagues.duree, vagues.intensite, c=vagues.annee, cmap='plasma', s=25, edgecolor='k', lw=.3)
-fig.colorbar(sc, ax=a1, label='Année')
-a1.set(xlabel='Durée (jours)', ylabel='Intensité : anomalie moyenne (°C)', title='Vagues de chaleur à Brest')
+plt.figure(figsize=(8, 5))
+plt.scatter(vagues['duree'], vagues['intensite'], c=vagues['annee'], cmap='plasma', s=25, edgecolor='k', lw=0.3)
+plt.colorbar(label='Année')
+plt.xlabel('Durée (jours)')
+plt.ylabel('Intensité : anomalie moyenne (°C)')
+plt.title('Vagues de chaleur à Brest (1940-2025)')
+plt.show()
 
-decennie = vagues.annee // 10 * 10
-nb_annees = pd.Series(range(1940, 2026)).floordiv(10).mul(10).value_counts()   # la décennie 2020 n'a que 6 ans
-(decennie.value_counts() / nb_annees).sort_index().plot.bar(ax=a2, rot=0, color='tab:red')
-a2.set(xlabel='Décennie', ylabel='Vagues par an', title='Fréquence des vagues')
-plt.tight_layout()
+# nombre moyen de vagues par an dans chaque décennie (la décennie 2020 ne compte que 6 ans, de 2020 à 2025)
+par_decennie = vagues.groupby(vagues['annee'] // 10 * 10).size()
+nb_annees = pd.Series(10, index=par_decennie.index)
+nb_annees[2020] = 6
+(par_decennie / nb_annees).plot.bar(rot=0, color='tab:red', figsize=(8, 3.5))
+plt.xlabel('Décennie')
+plt.ylabel('Vagues par an')
+plt.title('Nombre de vagues de chaleur par an')
 plt.show()
 '''
 
