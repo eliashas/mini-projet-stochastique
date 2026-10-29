@@ -6,10 +6,10 @@ C = {}
 C['membres'] = '''
 The five students are:
 - Elias Hasnaou
-- Christian [nom à compléter]
+- Christian Trandafir
 - Reda El Mekkaoui
-- Yazid [nom à compléter]
-- [à compléter]
+- Mohamed Yazid Samrani
+- Sefyani Diae
 '''
 
 C['saison'] = r'''

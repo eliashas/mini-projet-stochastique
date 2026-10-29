@@ -158,8 +158,10 @@ donc, à petite échelle, la difficulté de 2100 : prédire pour un CO2 jamais o
 - **Loi des valeurs extrêmes, GEV** (Reda) : la loi que donne la théorie pour le maximum d'un grand nombre de valeurs
   (ici, le maximum de toutes les températures de l'année). Le centre de la loi dépend du CO2. Pour Tmin, on applique la même
   méthode à $-T_{\min}$, car le minimum est le maximum des valeurs opposées.
-- **Réseau générateur** (Elias) : un petit réseau de neurones qui apprend à générer les écarts à la droite. Il est
-  entraîné directement à minimiser le CRPS.
+- **Réseaux génératifs et diffusion** (Elias) : des réseaux de neurones qui apprennent à générer des températures,
+  entraînés à minimiser le CRPS. Il a retenu un générateur direct pour Tmax et un **modèle de diffusion** pour Tmin
+  (le type de réseau suggéré par le sujet). Il a aussi testé un DDPM classique, abandonné car il produisait des valeurs
+  absurdes pour Tmin (jusqu'à −1 933 °C).
 - **Régression quantile** (Yazid) : au lieu de supposer une loi, on ajuste 99 droites, une par quantile (1 %, 2 %, …,
   99 %).
 - **Réseau à mélange de gaussiennes** (Diae) : un réseau de neurones qui donne, pour chaque valeur du CO2, un mélange
@@ -187,18 +189,17 @@ redonne l'erreur absolue.
 | **Régression bayésienne** | Christian | **1,57** | **0,98** |
 | Loi des valeurs extrêmes (GEV) | Reda | 1,68 | 0,99 |
 | Référence | — | 1,70 | 1,14 |
-| Réseau générateur | Elias | 1,71 | 1,13 |
+| Réseaux génératifs et diffusion | Elias | 1,75 | 1,03 |
 | Régression quantile | Yazid | 1,81 | 1,07 |
 | Réseau à mélange de gaussiennes | Diae | 1,85 | 1,18 |
 
-Elias a aussi testé des **modèles de diffusion**, comme le suggère le sujet : un DDPM classique et une diffusion
-entraînée au CRPS. Le DDPM produisait des valeurs absurdes pour Tmin (jusqu'à −1 933 °C), et la diffusion au CRPS
-obtient 1,03 °C sur Tmin : mieux que la référence, mais moins bien que la régression bayésienne.
-
-Ces scores dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre), mais le classement de
-la régression bayésienne ne change pas : elle est la meilleure pour Tmax et pour Tmin (la GEV est très proche pour
-Tmin). Les deux réseaux de neurones ne font pas vraiment mieux que la référence : avec seulement 61 années pour
-apprendre, une méthode plus flexible n'a pas assez de données pour trouver mieux qu'une loi simple. Le meilleur modèle n'est donc pas le plus compliqué.
+Les scores d'Elias viennent de son propre code (entraîné sur GPU) ; les autres ont été recalculés avec le même
+protocole. Ils dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre), mais le classement
+de la régression bayésienne ne change pas : elle est la meilleure pour Tmax et pour Tmin (la GEV est très proche pour
+Tmin). Les réseaux de neurones ne la battent pas : pour Tmax, ils font même moins bien que la référence, et pour Tmin,
+la diffusion d'Elias fait mieux que la référence mais reste derrière. Avec seulement 61 années pour apprendre, une
+méthode plus flexible n'a pas assez de données pour trouver mieux qu'une loi simple. Le meilleur modèle n'est donc pas
+le plus compliqué.
 C'est la régression bayésienne qu'on développe dans la suite.
 
 Une fois la méthode choisie, on la **réentraîne sur toutes les années 1940-2025** pour faire les prédictions jusqu'en
