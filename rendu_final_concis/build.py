@@ -196,21 +196,21 @@ redonne l'erreur absolue.
 | Régression quantile | Yazid | 1,81 | 1,07 |
 | Réseau à mélange de gaussiennes | Diae | 1,85 | 1,18 |
 
-Les méthodes à base de réseaux de neurones et la GEV ont été codées en PyTorch. Les scores d'Elias viennent de son
-propre code (entraîné sur GPU) ; les autres ont été recalculés avec le même protocole. Ils dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre). La régression
-bayésienne a le meilleur CRPS pour Tmax. Pour Tmin, elle est pratiquement à égalité avec la GEV et la diffusion avec
-ancre (0,98 à 0,99) : on garde alors la régression bayésienne, plus simple, ce qui permet aussi d'utiliser le même
-modèle pour Tmax et Tmin. Avec seulement 61 années pour apprendre, les réseaux de neurones ne font donc pas mieux
-qu'une méthode simple. On remarque aussi que la meilleure version de la diffusion est celle où la droite est
-incertaine : c'est la même idée que la régression bayésienne, et c'est ce qui l'améliore le plus.
+Les réseaux de neurones et la GEV ont été codés en PyTorch, et les modèles d'Elias entraînés sur GPU. Les scores
+varient d'environ ±0,03 °C d'une exécution à l'autre.
 
-Attention, « meilleur » veut dire ici meilleur CRPS sur 2001-2025, pas meilleur modèle dans l'absolu. Le CRPS juge
-toute la loi, mais surtout son centre : il dit peu de chose sur la queue de la loi, qui compte pour la question des
-40 °C, et 25 années de test, c'est peu. C'est donc le critère qui nous paraît le plus raisonnable pour choisir, mais
-d'autres choix restaient défendables (par exemple la GEV, faite pour les extrêmes, et très proche pour Tmin).
+La régression bayésienne a le meilleur CRPS pour Tmax. Pour Tmin, elle est à égalité avec la GEV et la diffusion
+(0,98 à 0,99). Les réseaux de neurones ne font pas mieux, pour une raison simple : ils ont beaucoup de paramètres à
+régler (environ 1 200 pour la diffusion) et seulement 61 années pour apprendre. Avec si peu de données, ils ne peuvent
+pas apprendre mieux qu'une loi simple. D'ailleurs, la meilleure diffusion est celle où la droite est incertaine :
+c'est la même idée que la régression bayésienne.
 
-**Ce que donnent les méthodes en 2100.** Pour vérifier ce choix autrement qu'avec le CRPS, on a aussi regardé ce que
-chaque méthode prédit pour Tmax en 2100 avec SSP5-8.5 (946 ppm), une fois réentraînée sur 1940-2025 :
+Attention, « meilleur » veut dire ici meilleur CRPS sur 2001-2025, pas meilleur modèle dans l'absolu : 25 années de
+test, c'est peu, et le CRPS dit peu de chose sur les valeurs extrêmes. C'est le critère qui nous paraît le plus
+raisonnable, mais d'autres choix restaient défendables (par exemple la GEV, faite pour les extrêmes).
+
+**Ce que donnent les méthodes en 2100.** On a aussi regardé ce que chaque méthode prédit pour Tmax en 2100 avec
+SSP5-8.5 (946 ppm), une fois réentraînée sur 1940-2025 :
 
 | Méthode | Médiane (°C) | Intervalle 5-95 % (°C) | P(Tmax 2100 > 40 °C) | Problème |
 |:--|:-:|:-:|:-:|:--|
@@ -218,27 +218,22 @@ chaque méthode prédit pour Tmax en 2100 avec SSP5-8.5 (946 ppm), une fois rée
 | Diffusion avec ancre incertaine (Elias) | 32,5 | 26,7 – 39,0 | 3,0 % | — |
 | Diffusion entraînée au CRPS (Elias) | 32,6 | 28,7 – 37,3 | 0,6 % | — |
 | GEV (Reda) | 31,4 | 26,2 – 37,1 | 0,8 % | — |
-| Référence | 32,8 | 29,2 – 36,4 | 0,01 % | trop sûre d'elle : une seule pente |
-| Régression quantile (Yazid) | 31,7 | 26,6 – 44,0 | 6,8 % | les 99 droites s'écartent |
+| Référence | 32,8 | 29,2 – 36,4 | 0,01 % | trop sûre d'elle |
+| Régression quantile (Yazid) | 31,7 | 26,6 – 44,0 | 6,8 % | diverge |
 | Réseau à mélange (Diae) | 29,1 | 23,8 – 34,7 | 0,06 % | ne suit plus le CO2 |
 
-Les modèles de diffusion d'Elias et la GEV donnent des projections proches de la nôtre (médiane de 31,4 à 32,8 °C).
-Trois méthodes posent en revanche problème quand on extrapole. La régression quantile diverge : ses 99 droites ont
-des pentes différentes et s'écartent loin des données, ce qui donne un quantile 95 % à 44 °C en 2100, 88 % de
-chances de dépasser 40 °C au moins une fois d'ici 2100, et des Tmin jusqu'à −19 °C (le record est de −6,6 °C). Le
-réseau de Diae sature : sa médiane reste bloquée vers 29 °C dès 2050, alors que le CO2 continue d'augmenter. Son
-entrée est le $\ln(\mathrm{CO_2})$ centré-réduit, qui va de −1,7 à 1,8 sur 1940-2025 mais vaut 10,3 en 2100 avec
-SSP5-8.5, et ses neurones utilisent $\tanh$, qui devient constante pour les grandes valeurs ($\tanh(4) \approx 0{,}999$).
-Le réseau généralise bien entre les valeurs qu'il a vues, mais pas aussi loin au-delà. Le DDPM d'Elias donnait, lui, des valeurs
-absurdes pour Tmin. Enfin, la référence ne diverge pas, mais elle est trop confiante : avec une seule pente, elle
-donne 0,01 % au lieu de 1,5 %. Le choix de la régression bayésienne est donc cohérent avec ce que les méthodes
-prédisent pour 2100, et pas seulement avec le CRPS.
+La diffusion et la GEV donnent des résultats proches des nôtres. Trois méthodes posent problème :
 
-C'est la régression bayésienne qu'on développe dans la suite.
+- la régression quantile diverge : ses 99 droites s'écartent quand on s'éloigne des données ;
+- le réseau de Diae n'a jamais vu un CO2 aussi élevé, et sa prédiction reste bloquée vers 29 °C dès 2050 ;
+- la référence est trop sûre d'elle : avec une seule droite, elle donne 0,01 % au lieu de 1,5 %.
 
-Une fois la méthode choisie, on la **réentraîne sur toutes les années 1940-2025** pour faire les prédictions jusqu'en
-2100 : le test sur 2001-2025 servait seulement à choisir la méthode, et il vaut mieux utiliser toutes les données
-disponibles pour prédire le futur.
+Notre choix est donc cohérent avec ce que les méthodes prédisent pour 2100, et pas seulement avec le CRPS.
+
+**Dans la suite**, on développe les deux premières méthodes du tableau des scores : la régression bayésienne, qu'on
+retient pour les projections, et la diffusion, le type de modèle suggéré par le sujet. La méthode retenue est
+**réentraînée sur toutes les années 1940-2025** pour prédire jusqu'en 2100 : le test sur 2001-2025 servait seulement à
+choisir, et il vaut mieux utiliser toutes les données pour prédire le futur.
 
 ## Le modèle retenu : régression bayésienne
 
@@ -384,33 +379,32 @@ print(resume_2100(sims_max, 40).round(4).to_string())
 '''
 
 DIFFUSION_MD = r"""
-### Pour comparaison : le modèle de diffusion d'Elias (version courte)
+## Le modèle de diffusion (Elias)
 
-Le sujet propose les modèles de diffusion : voici une version courte, en PyTorch, de la meilleure diffusion d'Elias
-(avec ancre incertaine). On garde une droite $\mu(C)=a+b\ln C$ (l'« ancre »), et on note $z=(T-\mu)/e$ les écarts à
-la droite, divisés par leur écart-type $e$. Un petit réseau $g_\phi(u,s,\zeta)$ apprend à générer ces écarts :
+C'est le type de réseau suggéré par le sujet. L'idée, en trois points :
 
-- **entraînement** : on abîme un écart observé avec du bruit, $u=(1-s)\,z+s\,\varepsilon$, avec un niveau de bruit
-  $s\sim\mathcal U(0,1)$ et $\varepsilon\sim\mathcal N(0,1)$. Le réseau propose $M=32$ écarts « propres »
-  $\hat z_m=g_\phi(u,s,\zeta_m)$, avec $\zeta_m\sim\mathcal N(0,1)$, et on minimise le CRPS de ces 32 propositions face
-  au vrai $z$ ;
-- **génération** : on part d'un bruit pur ($s=1$, $u\sim\mathcal N(0,1)$), un passage du réseau donne un écart $\hat z$,
-  et $T=a^{(k)}+b^{(k)}\ln C+e\,\hat z$, où la droite $(a^{(k)},b^{(k)})$ est tirée parmi 200 droites réajustées par
-  bootstrap (c'est l'ancre incertaine).
+- on garde une droite en $\ln(\mathrm{CO_2})$, l'« ancre », et on regarde les écarts des années à cette droite ;
+- un réseau de neurones apprend à fabriquer des écarts réalistes : on abîme un vrai écart avec du bruit, le réseau
+  doit retrouver un écart propre, et on note ses propositions avec le CRPS ;
+- pour prédire, on lui donne un bruit pur, il en fait un écart, et on l'ajoute à une droite tirée au hasard parmi 500
+  droites plausibles (l'« ancre incertaine »).
+
+En formules : avec $z=(T-a-b\ln C)/e$ l'écart réduit à la droite, on abîme $z$ en $u=(1-s)\,z+s\,\varepsilon$, avec un
+niveau de bruit $s\sim\mathcal U(0,1)$ et $\varepsilon\sim\mathcal N(0,1)$. Le réseau $g_\phi$ propose $M=32$ écarts
+$\hat z_m=g_\phi(u,s,\zeta_m)$, avec $\zeta_m\sim\mathcal N(0,1)$, et on minimise le CRPS de ces propositions face à $z$.
+Pour prédire, on prend $s=1$ et $u\sim\mathcal N(0,1)$, puis $T=a^{(k)}+b^{(k)}\ln C+e\,\hat z$.
 """
 
 DIFFUSION = r"""
 alea = np.random.default_rng(1)       # générateur à part, pour ne pas changer les tirages de la suite
 
 def ancre(x, t):
-    # droite des moindres carrés en ln(CO2), avec pente >= 0
+    # droite en ln(CO2), avec pente >= 0 (plus de CO2 ne refroidit pas)
     b = max(np.polyfit(x, t, 1)[0], 0.0)
-    a = np.mean(t - b * x)
-    return a, b
+    return np.mean(t - b * x), b
 
 class Debruiteur(torch.nn.Module):
-    # g(u, s, zeta) : reçoit un écart abîmé par le bruit u, le niveau de bruit s et un hasard zeta,
-    # et propose un écart « propre » à la droite
+    # g(u, s, zeta) : reçoit un écart abîmé u, le niveau de bruit s et un hasard zeta, et propose un écart propre
     def __init__(self):
         super().__init__()
         self.reseau = torch.nn.Sequential(torch.nn.Linear(3, 32), torch.nn.SiLU(),
@@ -418,17 +412,17 @@ class Debruiteur(torch.nn.Module):
     def forward(self, u, s, zeta):
         return self.reseau(torch.stack([u, s, zeta], dim=-1)).squeeze(-1)
 
-def crps_ensemble(X, y):
-    # CRPS moyen d'ensembles X (lot, M) face aux valeurs y (lot) ; version sans biais pour M petit
+def crps_entrainement(X, y, alpha=0.95):
+    # CRPS de M propositions X (lot, M) face à y (lot) : 95 % version sans biais + 5 % version empirique
     M = X.shape[1]
-    ecart = (X - y[:, None]).abs().mean(1)
-    largeur = (X[:, :, None] - X[:, None, :]).abs().sum((1, 2)) / (2 * M * (M - 1))
-    return (ecart - largeur).mean()
+    X = X.sort(dim=1).values
+    w = 2 * torch.arange(1, M + 1) - M - 1
+    return ((X - y[:, None]).abs().mean(1) - (X * w).sum(1) * (alpha / (M * (M - 1)) + (1 - alpha) / M**2)).mean()
 
-def entrainer_diffusion(x, t, pas=1500, M=32, B=200):
+def entrainer_diffusion(x, t, pas, M=32, B=500):
     a, b = ancre(x, t)
     r = t - a - b * x
-    e = r.std()
+    e = np.std(r, ddof=2)
     z = torch.tensor(r / e, dtype=torch.float32)                 # écarts réduits à la droite
     torch.manual_seed(0)
     g = Debruiteur()
@@ -438,27 +432,36 @@ def entrainer_diffusion(x, t, pas=1500, M=32, B=200):
         s = torch.rand(64)                                       # niveau de bruit entre 0 et 1
         u = (1 - s) * zb + s * torch.randn(64)                   # écart abîmé par le bruit
         X = g(u[:, None].expand(-1, M), s[:, None].expand(-1, M), torch.randn(64, M))   # M propositions
-        perte = crps_ensemble(X, zb)
-        opt.zero_grad(); perte.backward(); opt.step()
-    # ancre incertaine : B droites réajustées sur des données rééchantillonnées (bootstrap des écarts)
-    droites = np.array([ancre(x, a + b * x + alea.choice(r, len(r))) for _ in range(B)])
-    return g, e, droites
+        opt.zero_grad()
+        crps_entrainement(X, zb).backward()
+        torch.nn.utils.clip_grad_norm_(g.parameters(), 1.0)
+        opt.step()
+    # ancre incertaine : B droites réajustées après avoir rééchantillonné les écarts par blocs de 3 années
+    n, rc = len(r), r - r.mean()
+    droites = []
+    for _ in range(B):
+        debuts = alea.integers(0, n, size=-(-n // 3))
+        ix = ((debuts[:, None] + np.arange(3)) % n).ravel()[:n]
+        droites.append(ancre(x, a + b * x + rc[ix]))
+    return g, e, np.array(droites)
 
 def tirer_diffusion(modele, x_futur, n=N):
     g, e, droites = modele
-    with torch.no_grad():                                        # génération : bruit pur (s = 1), un passage
+    with torch.no_grad():                                        # prédiction : bruit pur (s = 1), un passage
         forme = (n, len(x_futur))
         z = g(torch.randn(forme), torch.ones(forme), torch.randn(forme)).numpy()
     a, b = droites[alea.integers(len(droites), size=n)].T
     return a[:, None] + b[:, None] * x_futur + e * z
 
+PAS = {'max': 1250, 'min': 1500}      # nombres de pas retenus par Elias
+
 # même test que pour la régression bayésienne : appris sur 1940-2000, noté sur 2001-2025
 for var in ['max', 'min']:
-    m = entrainer_diffusion(x[avant], y[var].to_numpy()[avant])
+    m = entrainer_diffusion(x[avant], y[var].to_numpy()[avant], PAS[var])
     print(f'Diffusion, CRPS T{var} 2001-2025 : {crps(tirer_diffusion(m, x[apres]), y[var].to_numpy()[apres]):.2f} °C')
 
 # Tmax en 2100 avec SSP5-8.5, après réentraînement sur 1940-2025
-m = entrainer_diffusion(x, y['max'].to_numpy())
+m = entrainer_diffusion(x, y['max'].to_numpy(), PAS['max'])
 t2100 = tirer_diffusion(m, np.log(yearly_future_co2['ssp5-8.5'].to_numpy()))[:, -1]
 print(f'Tmax 2100 (SSP5-8.5) : médiane {np.median(t2100):.1f} °C, P(> 40 °C) = {np.mean(t2100 > 40):.1%}')
 """

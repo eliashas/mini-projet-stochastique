@@ -83,12 +83,16 @@ pour le modèle de référence.
 '''
 
 C['diffusion'] = r'''
-**Commentaire.** Cette version courte (1 500 pas d'entraînement, quelques secondes sur CPU) obtient 1,67 °C pour Tmax
-et 1,00 °C pour Tmin, proche du code complet d'Elias (1,65 et 0,99). Elle reste derrière la régression bayésienne pour
-Tmax (1,57 °C) et à peu près à égalité pour Tmin. En 2100 avec SSP5-8.5, elle donne une médiane de 33,1 °C et une
-probabilité de dépasser 40 °C de 3,3 %, proches de nos résultats. Un réseau plus complexe ne change donc pas la
-conclusion : avec 86 années, c'est surtout l'incertitude sur la droite qui compte, et la régression bayésienne la
-traite de façon plus simple et plus directe.
+**Commentaire.** On retrouve les scores d'Elias : 1,65 °C pour Tmax et 0,99 °C pour Tmin. La diffusion fait mieux que
+la référence, mais pas mieux que la régression bayésienne (1,57 et 0,98 °C).
+
+La raison est simple : il n'y a pas assez de données. Le réseau a 1 217 paramètres à régler, et seulement 61 années
+pour apprendre. Avec si peu d'exemples, il ne peut pas apprendre la forme des écarts à la droite mieux qu'une simple
+loi normale. Ce qui l'aide vraiment, c'est l'ancre incertaine, c'est-à-dire la même idée que la régression bayésienne.
+
+En 2100 avec SSP5-8.5, la diffusion donne une médiane de 32,7 °C et une probabilité de dépasser 40 °C de 2,9 %,
+proches de nos résultats. On garde donc la régression bayésienne pour les projections : elle fait aussi bien, en plus
+simple.
 '''
 
 C['proj'] = r'''
