@@ -21,10 +21,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch
-from sklearn.linear_model import QuantileRegressor
 
 rng = np.random.default_rng(0)   # graine fixée pour retrouver les mêmes résultats
-torch.manual_seed(0)
 plt.rcParams.update({'figure.figsize': (11, 4), 'axes.grid': True, 'grid.alpha': .3})
 '''
 
@@ -105,229 +103,220 @@ plt.show()
 
 # ------------------------------------------------------------------ partie 2
 TMAX = r'''
-y = yearly_temp_brest.assign(annee=pd.to_datetime(yearly_temp_brest.valid_time).dt.year)
+y = yearly_temp_brest.copy()
+y['annee'] = pd.to_datetime(y['valid_time']).dt.year
 
-fig, ax = plt.subplots()
-ax.plot(y.annee, y['max'], 'o-', ms=3, lw=1, color='tab:red', label='Maximum annuel')
-ax.plot(y.annee, y['max'].rolling(11, center=True).mean(), lw=2.5, color='k', label='Moyenne glissante sur 11 ans')
-ax.set(xlabel='Année', ylabel='Température (°C)', title='Température maximale annuelle à Brest')
-ax.legend()
+plt.plot(y['annee'], y['max'], 'o-', ms=3, lw=1, color='tab:red', label='Maximum annuel')
+# moyenne glissante sur 11 ans pour voir la tendance sans les variations d'une année à l'autre
+plt.plot(y['annee'], y['max'].rolling(11, center=True).mean(), lw=2.5, color='k', label='Moyenne glissante sur 11 ans')
+plt.xlabel('Année')
+plt.ylabel('Température (°C)')
+plt.title('Température maximale annuelle à Brest (1940-2025)')
+plt.legend()
 plt.show()
-for a, b in [(1940, 1979), (1980, 2025)]:
-    s = y.loc[y.annee.between(a, b), 'max']
-    print(f'{a}-{b} : moyenne {s.mean():.1f} °C, écart-type {s.std():.1f} °C')
+
+print('Moyenne 1940-1979 :', round(y.loc[y['annee'] < 1980, 'max'].mean(), 1), '°C')
+print('Moyenne 1980-2025 :', round(y.loc[y['annee'] >= 1980, 'max'].mean(), 1), '°C')
 '''
 
 CORREL = r'''
-T = {'T brute': y['max']} | {f'T lissée {w} ans': y['max'].rolling(w, center=True).mean() for w in (5, 11, 21)}
-CO2 = {'CO2': y.co2, 'ln(CO2)': np.log(y.co2), 'CO2²': y.co2**2}
-print('Corrélation de Pearson entre Tmax annuelle et CO2 (1940-2025) :')
-print(pd.DataFrame({c: {t: T[t].corr(CO2[c]) for t in T} for c in CO2}).round(2))
+# transformations testées pour la température et pour le CO2
+T = {'T': y['max'],
+     'ln(T)': np.log(y['max']),
+     'T lissée 5 ans': y['max'].rolling(5, center=True).mean(),
+     'T lissée 11 ans': y['max'].rolling(11, center=True).mean(),
+     'T lissée 21 ans': y['max'].rolling(21, center=True).mean()}
+CO2 = {'CO2': y['co2'], 'ln(CO2)': np.log(y['co2']), 'CO2²': y['co2']**2}
+
+# coefficient de corrélation linéaire pour chaque couple (température, CO2)
+tableau = pd.DataFrame({c: {t: T[t].corr(CO2[c]) for t in T} for c in CO2})
+print('Corrélation linéaire entre Tmax et CO2 (1940-2025) :')
+print(tableau.round(2))
 '''
 
 METHODE = r'''
-## Notre approche
+## Notre démarche
 
-On modélise la loi de la température extrême de l'année $t$ sachant le CO2 $C_t$ (ppm), avec la variable
-$x_t=\ln(C_t/280)$ (l'effet de serre du CO2 est logarithmique, 280 ppm = niveau préindustriel).
-Chaque modèle donne une **loi**, qu'on représente par $N=10\,000$ tirages Monte-Carlo par année.
-On compare cinq modèles, chacun proposé par un membre du groupe :
+Pour cette partie, nous avons organisé une petite compétition au sein du groupe : chaque membre a proposé et codé sa
+propre méthode de prédiction probabiliste, puis toutes les méthodes ont été évaluées selon le même protocole. Seule la
+meilleure est présentée en détail dans la suite ; les autres sont résumées ci-dessous avec leur score.
 
-1. **Référence** : $T_t=a+b\,x_t+\sigma\varepsilon_t$, $\varepsilon_t\sim\mathcal N(0,1)$, ajusté par moindres carrés.
-2. **Régression bayésienne** (Christian) : même modèle, avec un a priori $p(a,b,\sigma^2)\propto\sigma^{-2}\mathbf 1_{b\ge0}$.
-   On tire $\sigma^2\sim \mathrm{RSS}/\chi^2_{n-2}$ puis $(a,b)\mid\sigma^2\sim\mathcal N\big(\hat\beta,\sigma^2(X^\top X)^{-1}\big)$,
-   en rejetant les tirages avec $b<0$. Chaque tirage de paramètres sert ensuite à tirer une année. L'incertitude sur
-   la pente est ainsi prise en compte, ce qui compte beaucoup quand on extrapole jusqu'à 946 ppm.
-3. **Régression quantile** (Yazid) : pour $\tau=0{,}01,\dots,0{,}99$, une droite $q_\tau(x)=a_\tau+b_\tau x$ minimise la
-   perte pinball $\sum_i\rho_\tau(T_i-a_\tau-b_\tau x_i)+\alpha|b_\tau|$, avec $\rho_\tau(u)=u(\tau-\mathbf 1_{u<0})$.
-   On trie les 99 quantiles (pour éviter qu'ils se croisent) puis on tire $U\sim\mathcal U(0,1)$ et $T=q_U(x)$ par interpolation.
-4. **GEV non stationnaire** (Reda, pour les maxima) : la théorie des valeurs extrêmes dit que le maximum de nombreuses
-   valeurs suit une loi GEV,
-   $$F(t)=\exp\Big\{-\big[1+\xi\tfrac{t-\mu_t}{\sigma}\big]^{-1/\xi}\Big\},\qquad \mu_t=\beta_0+\beta_1x_t .$$
-   Les paramètres $(\beta_0,\beta_1,\log\sigma,\xi)$ minimisent la log-vraisemblance négative avec PyTorch (Adam),
-   avec $\beta_1\ge0$ et $\xi\in[-0{,}5;-0{,}01]$ (queue bornée, classique pour des températures). On entraîne
-   200 modèles sur des rééchantillonnages bootstrap des années pour avoir l'incertitude sur les paramètres, puis on
-   tire par inversion : $T=\mu+\frac\sigma\xi\big[(-\ln U)^{-\xi}-1\big]$.
-   Pour les minima, Reda utilise plutôt un **bootstrap des résidus** de la droite (aucune loi supposée).
-5. **Générateur neuronal entraîné au CRPS** (Elias) : $T_t=a+b\,x_t+s\,g_\phi(\eta)$, où $g_\phi$ est un petit réseau
-   (2 couches de 32 neurones) qui transforme un bruit $\eta\sim\mathcal N(0,I_2)$ en résidu. Il est entraîné en
-   minimisant le CRPS de ses tirages (32 tirages par année observée) :
-   $$\mathcal L=\frac1M\sum_m|\hat T_m-T|-\frac{1}{2M(M-1)}\sum_{m\ne l}|\hat T_m-\hat T_l| .$$
-   Le réseau apprend donc la forme des résidus sans hypothèse de loi. La droite $(a,b)$ est rééchantillonnée par
-   bootstrap pour garder l'incertitude sur la tendance.
+Le protocole est le suivant :
 
-**Score.** On compare les modèles avec le CRPS (en °C, plus c'est bas mieux c'est), qui mesure l'écart entre toute la
-loi prédite $F$ et la valeur observée $y$ :
-$$\mathrm{CRPS}(F,y)=\mathbb E|X-y|-\tfrac12\mathbb E|X-X'|,\qquad X,X'\sim F\ \text{indépendants}.$$
+- entraînement sur les années **1940-2000** uniquement ;
+- prédiction de chaque année **2001-2025** à partir de son CO2 (10 000 tirages par année) ;
+- comparaison avec les températures observées à l'aide du **score CRPS** (défini plus bas).
 
-**Choix du modèle.** On découpe 1971–2000 en trois blocs de 10 ans ; chaque bloc est prédit par le modèle ajusté sur
-toutes les années d'avant (**validation**), et on retient le modèle qui a le meilleur CRPS moyen. Si plusieurs
-modèles sont à moins de 0,01 °C du meilleur, on prend le plus simple (dans l'ordre de la liste ci-dessus) : un
-écart aussi petit change d'une graine aléatoire à l'autre, il ne veut rien dire. Pour vérifier ce choix, on ajuste ensuite sur 1940–2000 et on note sur 2001–2025
-(**test**, des années plus riches en CO2 que tout l'entraînement). Les projections jusqu'en 2100 utilisent enfin le
-modèle retenu, réajusté sur 1940–2025.
+Les années 2001-2025 ont des concentrations de CO2 plus élevées que toutes celles de l'entraînement. Ce test reproduit
+donc, à petite échelle, la difficulté de 2100 : prédire pour un CO2 jamais observé.
+
+### Les méthodes proposées
+
+- **Référence** (point de comparaison) : une droite en fonction de $\ln(\mathrm{CO_2})$, plus un bruit gaussien.
+- **Régression bayésienne** (Christian) : la même droite, mais au lieu d'une seule pente, on tire des milliers de
+  pentes possibles. La prédiction devient donc plus incertaine quand on s'éloigne des données.
+- **Loi des valeurs extrêmes, GEV** (Reda) : la loi que donne la théorie pour le maximum d'un grand nombre de valeurs
+  (ici, le maximum de toutes les températures de l'année). Le centre de la loi dépend du CO2. Pour Tmin, on applique la même
+  méthode à $-T_{\min}$, car le minimum est le maximum des valeurs opposées.
+- **Réseau générateur** (Elias) : un petit réseau de neurones qui apprend à générer les écarts à la droite. Il est
+  entraîné directement à minimiser le CRPS.
+- **Régression quantile** (Yazid) : au lieu de supposer une loi, on ajuste 99 droites, une par quantile (1 %, 2 %, …,
+  99 %).
+- **Réseau à mélange de gaussiennes** (Diae) : un réseau de neurones qui donne, pour chaque valeur du CO2, un mélange
+  de 3 lois normales (leurs poids, moyennes et écarts-types).
+
+### Le score : le CRPS
+
+Nos méthodes ne donnent pas une valeur mais une loi, donc l'erreur habituelle $|\text{prédiction} - \text{observation}|$
+ne suffit pas. Le CRPS compare toute la loi prédite $F$ à la valeur observée $y$ :
+$$\mathrm{CRPS}(F,y)=\mathbb E|X-y|-\tfrac12\,\mathbb E|X-X'|$$
+où $X$ et $X'$ sont deux tirages faits au hasard dans notre loi prédite, l'un indépendamment de l'autre.
+
+- Le premier terme est la distance moyenne entre nos tirages et la réalité : il est petit si la loi est bien centrée.
+- Le second terme mesure la largeur de notre loi. Sans lui, le meilleur choix serait de toujours prédire une seule
+  valeur ; avec lui, une loi qui a la bonne largeur est récompensée.
+
+On calcule le CRPS pour chacune des 25 années de 2001-2025, puis on fait la moyenne : c'est ce score moyen qui
+figure dans le tableau. Il est en °C et plus il est petit, mieux c'est. Pour une prédiction à une seule valeur, il
+redonne l'erreur absolue.
+
+### Résultats sur 2001-2025
+
+| Méthode | Proposée par | CRPS Tmax (°C) | CRPS Tmin (°C) |
+|:--|:--|:-:|:-:|
+| **Régression bayésienne** | Christian | **1,57** | **0,98** |
+| Loi des valeurs extrêmes (GEV) | Reda | 1,68 | 0,99 |
+| Référence | — | 1,70 | 1,14 |
+| Réseau générateur | Elias | 1,71 | 1,13 |
+| Régression quantile | Yazid | 1,81 | 1,07 |
+| Réseau à mélange de gaussiennes | Diae | 1,85 | 1,18 |
+
+Ces scores dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre), mais le classement de
+la régression bayésienne ne change pas : elle est la meilleure pour Tmax et pour Tmin (la GEV est très proche pour
+Tmin). Les deux réseaux de neurones ne font pas vraiment mieux que la référence : avec seulement 61 années pour
+apprendre, une méthode plus flexible n'a pas assez de données pour trouver mieux qu'une loi simple. Le meilleur modèle n'est donc pas le plus compliqué.
+C'est la régression bayésienne qu'on développe dans la suite.
+
+Une fois la méthode choisie, on la **réentraîne sur toutes les années 1940-2025** pour faire les prédictions jusqu'en
+2100 : le test sur 2001-2025 servait seulement à choisir la méthode, et il vaut mieux utiliser toutes les données
+disponibles pour prédire le futur.
+
+## Le modèle retenu : régression bayésienne
+
+**Notations.** $T_t$ est le Tmax de l'année $t$ (°C), $x_t=\ln(C_t)$ où $C_t$ est le CO2 de l'année (ppm), et
+$T=(T_{1940},\dots,T_{2025})$ la liste des $n=86$ valeurs observées. Le signe « $\mid$ » se lit « sachant » et
+« $\sim$ » se lit « suit la loi ».
+
+**Le modèle.** Tmax est une droite en $\ln(\mathrm{CO_2})$ plus un bruit, qui représente la météo de l'année :
+$$T_t=a+b\,x_t+\sigma\,\varepsilon_t,\qquad \varepsilon_t\sim\mathcal N(0,1)\ \text{indépendants}.$$
+$a$ est la hauteur de la droite, $b$ sa pente, et $\sigma$ l'écart-type du bruit (de combien une année s'écarte en
+général de la droite).
+
+**Pourquoi $\ln(\mathrm{CO_2})$ ?** À la question précédente, CO2, $\ln(\mathrm{CO_2})$ et CO2² avaient la même corrélation
+(0,30 à 0,32). Mais en 2100 avec SSP5-8.5 (946 ppm), une simple droite donne un Tmax moyen d'environ 33 °C avec
+$\ln(\mathrm{CO_2})$, 38 °C avec CO2 et 48 °C avec CO2². On garde $\ln(\mathrm{CO_2})$ : l'effet du CO2 sur la température
+est connu pour être logarithmique (chaque doublement du CO2 réchauffe d'à peu près la même quantité), et c'est le seul
+choix qui reste réaliste en 2100.
+
+**Pourquoi bayésien ?** Avec 86 années, on ne connaît pas $a$, $b$ et $\sigma$ exactement : la pente estimée vaut
+environ $7{,}4 \pm 2{,}5$. Sur les CO2 observés, ça change peu de chose, mais à 946 ppm une petite erreur sur la pente
+devient une grosse erreur sur la température. Au lieu de garder une seule droite (celle des moindres carrés), on met
+une **loi de probabilité sur les paramètres**, qui dit quelles valeurs de $(a,b,\sigma)$ sont plausibles, et on en
+tire **beaucoup**. On part d'un a priori non informatif, avec une seule contrainte : plus de CO2 ne refroidit pas.
+$$p(a,b,\sigma^2)\propto\sigma^{-2}\,\mathbf 1_{b\ge0}.$$
+
+**La loi a posteriori** (ce qu'on sait des paramètres après avoir vu les données). On note $X$ le tableau des données
+(une colonne de 1 et une colonne $x_t$), $\hat\beta=(\hat a,\hat b)=(X^\top X)^{-1}X^\top T$ la droite des moindres carrés,
+et $\mathrm{MSE}=\frac1n\sum_t(T_t-\hat a-\hat b\,x_t)^2$ l'erreur quadratique moyenne de cette droite. Pour ce modèle,
+le résultat est classique :
+$$\sigma^2\mid T\sim\frac{n\cdot\mathrm{MSE}}{\chi^2_{n-2}},\qquad (a,b)\mid\sigma^2,T\sim\mathcal N\big(\hat\beta,\ \sigma^2(X^\top X)^{-1}\big).$$
+Le $\chi^2_{n-2}$ vient du fait que la somme des carrés des écarts, divisée par $\sigma^2$, est une somme de carrés de
+lois normales ($n-2$ car on a estimé deux paramètres, $a$ et $b$). Pour tirer $(a,b,\sigma)$ ensemble, on tire d'abord
+$\sigma^2$, puis $(a,b)$ sachant ce $\sigma^2$ : c'est la règle $p(a,b,\sigma^2)=p(\sigma^2)\,p(a,b\mid\sigma^2)$. Enfin,
+on rejette les tirages où $b<0$.
+
+**Prédiction par Monte-Carlo.** Pour une année future de CO2 $C$, on tire $N=10\,000$ jeux $(a^{(k)},b^{(k)},\sigma^{(k)})$
+et, pour chacun, **une** température :
+$$T^{(k)}=a^{(k)}+b^{(k)}\ln C+\sigma^{(k)}z^{(k)},\qquad z^{(k)}\sim\mathcal N(0,1).$$
+Exemple avec trois vrais tirages pour 2100 et SSP5-8.5 ($\ln C = 6{,}85$) :
+
+| $k$ | $\sigma$ | $a$ | $b$ | droite en 2100 | bruit $z$ | Tmax 2100 |
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| 1 | 1,89 | −12,5 | 6,47 | 31,8 °C | −0,45 | 31,0 °C |
+| 2 | 2,23 | −21,4 | 7,97 | 33,2 °C | +3,32 | 40,6 °C |
+| 3 | 2,16 | −22,1 | 8,08 | 33,3 °C | −1,06 | 31,1 °C |
+
+Les 10 000 valeurs de la dernière colonne forment la loi de Tmax en 2100, et $P(\text{Tmax}>40\,°\text{C})$ est la part
+de tirages au-dessus de 40 °C. La loi contient deux hasards : la météo de l'année ($\sigma z$), et notre incertitude sur
+la droite, qui change à chaque tirage grâce au bayésien. Sans le bayésien, la droite en 2100 vaudrait toujours
+32,8 °C, la loi serait plus étroite et la probabilité de dépasser 40 °C tomberait d'environ 1,6 % à 0,05 %.
 '''
 
 MODELES = r'''
-C0, N = 280, 10_000
+N = 10_000                          # nombre de tirages Monte-Carlo par année
+x = np.log(y['co2'].to_numpy())     # variable explicative : ln(CO2)
 
-def fit_ref(x, t):
-    b, a = np.polyfit(x, t, 1)
-    return a, b, np.std(t - a - b * x, ddof=2)
-
-def tirer_ref(m, x, n=N):
-    a, b, s = m
-    return a + b * x + s * rng.standard_normal((n, len(x)))
-
-def fit_bayes(x, t):                               # Christian
+def ajuster(x, t):
+    # tout ce qu'il faut pour tirer dans la loi a posteriori de (a, b, sigma)
     X = np.c_[np.ones_like(x), x]
     V = np.linalg.inv(X.T @ X)
-    beta = V @ X.T @ t
-    return beta, V, np.sum((t - X @ beta) ** 2), len(t) - 2
+    beta = V @ X.T @ t                       # moindres carrés
+    mse = np.mean((t - X @ beta) ** 2)        # erreur quadratique moyenne de la droite
+    return beta, V, mse, len(t)
 
-def tirer_bayes(m, x, n=N):
-    beta, V, rss, ddl = m
-    tirs = []
-    while sum(len(v) for v in tirs) < n:
-        s = np.sqrt(rss / rng.chisquare(ddl, n))
-        ab = beta + s[:, None] * rng.standard_normal((n, 2)) @ np.linalg.cholesky(V).T
-        tirs.append(np.c_[ab, s][ab[:, 1] >= 0])  # rejet des pentes négatives
-    a, b, s = np.concatenate(tirs)[:n].T[:, :, None]
-    return a + b * x + s * rng.standard_normal((n, len(x)))
-
-TAU = np.arange(1, 100) / 100
-def fit_qr(x, t, alpha=0):                         # Yazid
-    xm, xs = x.mean(), x.std()                     # x centré-réduit pour que la pénalité ait du sens
-    f = [QuantileRegressor(quantile=q, alpha=alpha, solver='highs').fit(((x - xm) / xs)[:, None], t) for q in TAU]
-    return xm, xs, np.array([r.intercept_ for r in f]), np.array([r.coef_[0] for r in f])
-
-def tirer_qr(m, x, n=N):
-    xm, xs, a, b = m
-    q = np.sort(a + np.outer((x - xm) / xs, b), axis=1)   # tri : les quantiles ne se croisent plus
-    u = rng.random((n, len(x)))
-    return np.stack([np.interp(u[:, i], TAU, q[i]) for i in range(len(x))], axis=1)
-
-def fit_gev(x, t, B=200, pas=3000):                # Reda
-    x, t = torch.tensor(x), torch.tensor(t)
-    i = torch.randint(len(t), (B, len(t)))
-    i[0] = torch.arange(len(t))                    # le modèle 0 est ajusté sur les vraies données
-    xb, tb = x[i], t[i]
-    theta = torch.tensor([t.mean().item(), 0., t.std().log().item(), -.1], dtype=torch.float64).repeat(B, 1)
-    theta.requires_grad_()
-    opt = torch.optim.Adam([theta], lr=.02)
-    for _ in range(pas):
-        b0, b1, log_s, xi = theta.T[:, :, None]
-        z = (1 + xi * (tb - b0 - b1 * xb) / log_s.exp()).clamp_min(1e-6)
-        nll = (log_s + (1 + 1 / xi) * z.log() + z ** (-1 / xi)).sum()
-        opt.zero_grad(); nll.backward(); opt.step()
-        with torch.no_grad():
-            theta[:, 1].clamp_(min=0)              # plus de CO2 ne refroidit pas
-            theta[:, 3].clamp_(-.5, -.01)
-    return theta.detach().numpy()
-
-def tirer_gev(theta, x, n=N):
-    b0, b1, log_s, xi = theta[rng.integers(len(theta), size=n)].T[:, :, None]
-    return b0 + b1 * x + np.exp(log_s) / xi * ((-np.log(rng.random((n, len(x))))) ** (-xi) - 1)
-
-def bootstrap_droites(x, t, B=200):
-    i = [np.arange(len(t))] + [rng.integers(len(t), size=len(t)) for _ in range(B - 1)]
-    return [np.polyfit(x[j], t[j], 1)[::-1] for j in i] , i
-
-def fit_residus(x, t):                             # Reda (minima)
-    droites, i = bootstrap_droites(x, t)
-    return [(a, b, t[j] - a - b * x[j]) for (a, b), j in zip(droites, i)]
-
-def tirer_residus(m, x, n=N):
-    out = np.empty((n, len(x)))
-    for k, j in enumerate(rng.integers(len(m), size=n)):
-        a, b, r = m[j]
-        out[k] = a + b * x + rng.choice(r, size=len(x))
-    return out
-
-def crps_torch(X, y):
-    M = X.shape[1]
-    return ((X - y[:, None]).abs().mean()
-            - (X[:, :, None] - X[:, None, :]).abs().sum((1, 2)).mean() / (2 * M * (M - 1)))
-
-def fit_nn(x, t, pas=1500):                        # Elias
-    a, b, s = fit_ref(x, t)
-    z = torch.tensor((t - a - b * x) / s, dtype=torch.float32)   # résidus réduits
-    torch.manual_seed(0)
-    g = torch.nn.Sequential(torch.nn.Linear(2, 32), torch.nn.SiLU(), torch.nn.Linear(32, 32), torch.nn.SiLU(),
-                            torch.nn.Linear(32, 1))
-    opt = torch.optim.Adam(g.parameters(), lr=1e-3)
-    for _ in range(pas):
-        zb = z[torch.randint(len(z), (64,))]
-        perte = crps_torch(g(torch.randn(64, 32, 2)).squeeze(-1), zb)
-        opt.zero_grad(); perte.backward(); opt.step()
-    return g, s, np.array(bootstrap_droites(x, t)[0])
-
-def tirer_nn(m, x, n=N):
-    g, s, droites = m
-    with torch.no_grad():
-        z = g(torch.randn(n, len(x), 2)).squeeze(-1).numpy()
-    a, b = droites[rng.integers(len(droites), size=n)].T
-    return a[:, None] + b[:, None] * x + s * z
+def tirer(modele, x_futur, n=N):
+    # n tirages de la température pour chaque valeur de x_futur : tableau (n, nombre d'années)
+    beta, V, mse, n_annees = modele
+    params = np.empty((0, 3))
+    while len(params) < n:                   # on tire jusqu'à avoir n jeux de paramètres avec b >= 0
+        s = np.sqrt(n_annees * mse / rng.chisquare(n_annees - 2, n))      # sigma (loi du chi2)
+        ab = beta + s[:, None] * rng.standard_normal((n, 2)) @ np.linalg.cholesky(V).T   # (a, b) sachant sigma
+        garder = ab[:, 1] >= 0               # rejet : plus de CO2 ne refroidit pas
+        params = np.vstack([params, np.c_[ab[garder], s[garder]]])
+    a, b, s = params[:n].T
+    return a[:, None] + b[:, None] * x_futur + s[:, None] * rng.standard_normal((n, len(x_futur)))
 
 def crps(tirages, obs):
-    """CRPS moyen (°C) ; tirages (n, nb_années), obs (nb_années,)."""
+    # CRPS moyen (°C) entre les tirages (n, nombre d'années) et les valeurs observées
     s = np.sort(tirages, axis=0)
     n = len(s)
     w = (2 * np.arange(1, n + 1) - n - 1) / n**2
     return np.mean(np.abs(s - obs).mean(axis=0) - w @ s)
-
-MODELES = {'max': {'Référence': (fit_ref, tirer_ref), 'Bayes': (fit_bayes, tirer_bayes), 'Quantiles': (fit_qr, tirer_qr),
-                   'GEV': (fit_gev, tirer_gev), 'Neuronal': (fit_nn, tirer_nn)}}
-# pour les minima, le bootstrap des résidus de Reda remplace la GEV (ordre = du plus simple au plus complexe)
-MODELES['min'] = {k: v for k, v in MODELES['max'].items() if k != 'GEV'}
-MODELES['min'] = {**dict(list(MODELES['min'].items())[:3]), 'Bootstrap résidus': (fit_residus, tirer_residus),
-                  'Neuronal': (fit_nn, tirer_nn)}
 '''
 
 COMPARAISON = r'''
-x = np.log(y.co2.to_numpy() / C0)
-# validation : 3 blocs de 10 ans, chacun prédit avec les années d'avant ; test : 2001-2025 appris sur 1940-2000
-blocs = [(y.annee < a, y.annee.between(a, a + 9)) for a in (1971, 1981, 1991)]
-test = (y.annee <= 2000, y.annee > 2000)
-
-def comparer(var):
-    t = y[var].to_numpy()
-    score = lambda fit, tirer, a, b: crps(tirer(fit(x[a], t[a]), x[b]), t[b])
-    res = pd.DataFrame({nom: {'validation 1971-2000': np.mean([score(f, g, a, b) for a, b in blocs]),
-                              'test 2001-2025': score(f, g, *test)}
-                        for nom, (f, g) in MODELES[var].items()}).T.sort_values('validation 1971-2000')
-    # écart < 0,01 °C = pas significatif (ça change d'une graine à l'autre) : on garde alors le plus simple
-    meilleur = res['validation 1971-2000'].min()
-    choix = next(nom for nom in MODELES[var] if res.loc[nom, 'validation 1971-2000'] < meilleur + 0.01)
-    print(f'CRPS (°C) pour T{var} :\n{res.round(3)}\n=> modèle retenu : {choix}')
-    return choix
-
-choix_max = comparer('max')
+# on refait le test du groupe : appris sur 1940-2000, noté sur 2001-2025
+avant, apres = (y['annee'] <= 2000).to_numpy(), (y['annee'] > 2000).to_numpy()
+for var in ['max', 'min']:
+    m = ajuster(x[avant], y[var].to_numpy()[avant])
+    print(f'CRPS T{var} 2001-2025 : {crps(tirer(m, x[apres]), y[var].to_numpy()[apres]):.2f} °C')
 '''
 
 PROJ = r'''
-futur = yearly_future_co2.assign(annee=pd.to_datetime(yearly_future_co2.valid_time).dt.year)
+futur = yearly_future_co2.copy()
+futur['annee'] = pd.to_datetime(futur['valid_time']).dt.year
 SSP = {'ssp1-2.6': 'tab:green', 'ssp2-4.5': 'tab:orange', 'ssp5-8.5': 'tab:red'}
 
-def projeter(var, nom):
-    """Réajuste le modèle sur 1940-2025 et tire 10 000 trajectoires 2026-2100 par scénario."""
-    fit, tirer = MODELES[var][nom]
-    m = fit(x, y[var].to_numpy())
-    return {s: tirer(m, np.log(futur[s].to_numpy() / C0)) for s in SSP}
+def projeter(var):
+    # modèle réajusté sur 1940-2025, puis 10 000 tirages pour chaque année 2026-2100 et chaque scénario
+    m = ajuster(x, y[var].to_numpy())
+    return {s: tirer(m, np.log(futur[s].to_numpy())) for s in SSP}
 
 def tracer(var, sims, seuil):
-    fig, ax = plt.subplots(figsize=(12, 4.5))
-    ax.plot(y.annee, y[var], 'k.-', lw=.8, ms=4, label='ERA5 1940-2025')
-    for s, col in SSP.items():
+    plt.figure(figsize=(12, 4.5))
+    plt.plot(y['annee'], y[var], 'k.-', lw=0.8, ms=4, label='Observations 1940-2025')
+    for s, couleur in SSP.items():
         q5, q50, q95 = np.percentile(sims[s], [5, 50, 95], axis=0)
-        ax.fill_between(futur.annee, q5, q95, color=col, alpha=.15)
-        ax.plot(futur.annee, q50, color=col, lw=2, label=f'{s.upper()} : médiane et intervalle 5-95 %')
-    ax.axhline(seuil, color='grey', ls='--', lw=1)
-    ax.set(xlabel='Année', ylabel=f'T{var} annuelle (°C)', title=f'Projections de la T{var} annuelle à Brest')
-    ax.legend(loc='upper left', fontsize=8)
+        plt.fill_between(futur['annee'], q5, q95, color=couleur, alpha=0.15)
+        plt.plot(futur['annee'], q50, color=couleur, lw=2, label=f'{s.upper()} : médiane et intervalle 5-95 %')
+    plt.axhline(seuil, color='grey', ls='--', lw=1)
+    plt.xlabel('Année')
+    plt.ylabel(f'T{var} annuelle (°C)')
+    plt.title(f'Projections de la T{var} annuelle à Brest')
+    plt.legend(loc='upper left', fontsize=8)
     plt.show()
 
-sims_max = projeter('max', choix_max)
+sims_max = projeter('max')
 tracer('max', sims_max, 40)
 '''
 
@@ -335,45 +324,31 @@ DIST = r'''
 def resume_2100(sims, seuil, au_dessus=True):
     lignes = {}
     for s, t in sims.items():
-        ev = t > seuil if au_dessus else t < seuil
+        depasse = t > seuil if au_dessus else t < seuil
         lignes[s.upper()] = {'CO2 2100 (ppm)': futur[s].iloc[-1],
                              **{f'q{p} 2100 (°C)': np.percentile(t[:, -1], p) for p in (5, 50, 95)},
-                             f'P(T 2100 {">" if au_dessus else "<"} {seuil} °C)': ev[:, -1].mean(),
-                             'P(au moins une fois 2026-2100)': ev.any(axis=1).mean()}
+                             f'P(T 2100 {">" if au_dessus else "<"} {seuil} °C)': depasse[:, -1].mean(),
+                             'P(au moins une fois 2026-2100)': depasse.any(axis=1).mean()}
     return pd.DataFrame(lignes).T
 
-fig, ax = plt.subplots(figsize=(9, 4))
-for s, col in SSP.items():
-    ax.hist(sims_max[s][:, -1], np.arange(18, 46, .25), density=True, histtype='stepfilled', alpha=.35,
-            color=col, label=s.upper())
-ax.axvline(40, color='grey', ls='--', label='40 °C')
-ax.set(xlabel='Tmax annuelle en 2100 (°C)', ylabel='Densité de probabilité (1/°C)',
-       title=f'Loi de la Tmax en 2100 ({choix_max}, 10 000 tirages)')
-ax.legend()
+plt.figure(figsize=(9, 4))
+for s, couleur in SSP.items():
+    plt.hist(sims_max[s][:, -1], np.arange(18, 46, 0.25), density=True, histtype='stepfilled', alpha=0.35,
+             color=couleur, label=s.upper())
+plt.axvline(40, color='grey', ls='--', label='40 °C')
+plt.xlabel('Tmax annuelle en 2100 (°C)')
+plt.ylabel('Densité de probabilité (1/°C)')
+plt.title('Loi de la Tmax en 2100 (10 000 tirages)')
+plt.legend()
 plt.show()
 print(resume_2100(sims_max, 40).round(4).to_string())
-
-def selon_modele(var, seuil, au_dessus=True):
-    """Même calcul avec les autres modèles, pour voir à quel point le résultat en dépend."""
-    lignes = {}
-    for nom in MODELES[var]:
-        t = projeter(var, nom)['ssp5-8.5'][:, -1]
-        lignes[nom] = {'médiane 2100 SSP5-8.5 (°C)': np.median(t),
-                       f'P(T 2100 {">" if au_dessus else "<"} {seuil} °C), SSP5-8.5': np.mean(t > seuil if au_dessus else t < seuil)}
-    print(pd.DataFrame(lignes).T.round(3).to_string())
-
-print()
-selon_modele('max', 40)
 '''
 
 MINIMA = r'''
-print(f"Corrélation Tmin / ln(CO2) : {y['min'].corr(np.log(y.co2)):.2f}\n")
-choix_min = comparer('min')
-sims_min = projeter('min', choix_min)
+print(f"Corrélation Tmin / ln(CO2) : {y['min'].corr(np.log(y['co2'])):.2f}\n")
+sims_min = projeter('min')
 tracer('min', sims_min, 0)
 print(resume_2100(sims_min, 0, au_dessus=False).round(3).to_string())
-print()
-selon_modele('min', 0, au_dessus=False)
 '''
 
 # ------------------------------------------------------------------ assemblage

@@ -56,92 +56,79 @@ plus de vagues aujourd'hui, c'est que les températures ont augmenté.
 '''
 
 C['tmax'] = r'''
-**Commentaire.** Le maximum annuel varie beaucoup d'une année à l'autre (de 21,7 à 34,2 °C), car il dépend de la
-météo de quelques jours. La moyenne sur 11 ans est à peu près plate jusqu'aux années 1980, puis elle monte : 25,1 °C
-en moyenne sur 1940-1979 contre 26,3 °C sur 1980-2025. Les années récentes sont aussi plus variables (écart-type
-de 1,9 à 2,4 °C). Le record est 2022 avec 34,2 °C, bien au-dessus des autres années.
+**Commentaire.** Le maximum annuel varie beaucoup d'une année à l'autre : de 21,7 °C (1958 et 2007) à 34,2 °C (2022).
+C'est normal, car il ne dépend que des quelques jours les plus chauds de l'année.
+
+La moyenne sur 11 ans montre mieux la tendance. Elle baisse un peu entre les années 1940 et 1960 (de 26 à environ
+24,5 °C), remonte vers 26 °C dans les années 1980, reste à peu près stable jusqu'en 2010, puis monte nettement jusqu'à
+environ 28,4 °C autour de 2020. En moyenne, le maximum annuel vaut 25,1 °C sur 1940-1979 et 26,3 °C sur 1980-2025.
+Le record de 2022 (34,2 °C) dépasse de plus de 3 °C le deuxième plus chaud (31,0 °C en 2003).
 '''
 
 C['correl'] = r'''
-**Commentaire.** La corrélation brute est faible ($r\approx0{,}31$) : une année donnée, la météo compte plus que le CO2.
-Transformer le CO2 change peu de chose ($\ln$ CO2 : 0,30, CO2² : 0,32), car le CO2 ne va que de 310 à 428 ppm et sur
-un si petit intervalle ces fonctions sont presque linéaires. Par contre, lisser la température augmente beaucoup la
-corrélation (0,49 sur 5 ans, 0,61 sur 11 ans, 0,83 sur 21 ans) : on enlève le bruit d'une année à l'autre et il reste
-la tendance, qui suit le CO2. Cela ne veut pas dire qu'on peut prédire le maximum d'une année précise : c'est pour ça
-qu'on fait ensuite des prédictions probabilistes. On garde $\ln$ CO2 dans les modèles car c'est la forme physique
-de l'effet de serre (le forçage radiatif est proportionnel à $\ln(C/C_0)$), même si ici les scores sont proches.
+**Commentaire.** La corrélation entre Tmax et le CO2 est faible ($r = 0{,}31$) : d'une année à l'autre, Tmax varie
+beaucoup, et le CO2 n'explique qu'une petite partie de ces variations.
+
+Transformer les variables (ln, carré) ne change presque rien (entre 0,30 et 0,32). C'est logique : sur des intervalles
+aussi petits (310 à 428 ppm, 21 à 34 °C), ces fonctions sont presque des droites.
+
+Par contre, lisser la température augmente beaucoup la corrélation : 0,49 sur 5 ans, 0,61 sur 11 ans, 0,83 sur 21 ans.
+La tendance de Tmax suit donc bien le CO2, mais pas la valeur d'une année précise. C'est pour ça qu'il faut des
+prédictions probabilistes, et pas une seule valeur par année.
 '''
 
 C['comparaison'] = r'''
-**Commentaire.** En validation, Bayes et la GEV sont à égalité (1,166 et 1,168 °C) : on retient **Bayes**, le plus
-simple des deux. Le test sur 2001-2025 confirme ce choix : Bayes y a le meilleur score (1,57 °C), devant la GEV
-(1,66 °C) et la référence (1,70 °C). Ce qui aide Bayes, c'est la prise en compte de l'incertitude sur la pente :
-les intervalles s'élargissent quand le CO2 sort de ce qu'on a vu à l'entraînement, ce qui est le cas sur 2001-2025.
-
-Le réseau de neurones ne fait pas mieux que la référence : avec seulement 30 à 60 années pour apprendre, il ne
-trouve rien de plus qu'une loi proche d'une gaussienne. La régression quantile est la moins bonne : ajuster 99 droites
-sur si peu de points rend les quantiles extrêmes instables.
+**Commentaire.** On retrouve les scores du tableau : 1,57 °C pour Tmax et 0,98 °C pour Tmin, contre 1,70 et 1,14 °C
+pour le modèle de référence.
 '''
 
 C['proj'] = r'''
 **Commentaire.** Les trois scénarios partent du même niveau en 2026 (médiane d'environ 27 °C) puis s'écartent. Avec
-SSP1-2.6 le CO2 redescend à 400 ppm et la médiane revient à 26,5 °C en 2100. Avec SSP2-4.5 elle atteint 28,6 °C et
-avec SSP5-8.5 (946 ppm) 32,8 °C : une année normale de 2100 serait alors aussi chaude que les années les plus chaudes
-observées jusqu'ici. Les bandes 5-95 % sont larges (environ 7 °C en 2026, 11 °C en 2100 pour SSP5-8.5) : la météo d'une
-année reste très variable, et l'incertitude sur la pente pèse de plus en plus quand le CO2 augmente.
+SSP1-2.6, le CO2 redescend à 400 ppm et la médiane reste à 26,5 °C en 2100. Avec SSP2-4.5, elle atteint 28,5 °C, et avec
+SSP5-8.5 (946 ppm) 32,8 °C : une année normale de 2100 serait alors aussi chaude que les années les plus chaudes
+observées jusqu'ici. Les bandes 5-95 % sont larges (environ 7 °C en 2026, 11 °C en 2100 pour SSP5-8.5) : Tmax varie
+beaucoup d'une année à l'autre, et l'incertitude sur la pente compte de plus en plus quand le CO2 augmente.
 '''
 
 C['dist'] = r'''
-**Réponse.** Avec Bayes, la probabilité de dépasser 40 °C à Brest :
+**Réponse.** Probabilité de dépasser 40 °C à Brest :
 
 | Scénario | Médiane 2100 | P(Tmax 2100 > 40 °C) | P(au moins une année > 40 °C entre 2026 et 2100) |
 |---|---|---|---|
 | SSP1-2.6 | 26,5 °C | ≈ 0 | ≈ 0 |
-| SSP2-4.5 | 28,6 °C | ≈ 0 | ≈ 0,02 % |
-| SSP5-8.5 | 32,8 °C | 1,5 % | 7,7 % |
+| SSP2-4.5 | 28,5 °C | ≈ 0 | ≈ 0 |
+| SSP5-8.5 | 32,8 °C | 1,5 % | 7,8 % |
 
 **Commentaire.** Dépasser 40 °C reste rare pour une année donnée, même en 2100 avec SSP5-8.5 (1,5 %). Sur 75 ans, le
 risque s'accumule : dans ce scénario, environ 1 trajectoire sur 13 dépasse 40 °C au moins une fois. Avec 10 000
 tirages, « 0 » veut seulement dire moins d'environ 1 chance sur 10 000, pas que c'est impossible.
 
-Le deuxième tableau montre que ce chiffre dépend beaucoup du modèle : la médiane 2100 bouge peu (31,4 à 32,9 °C),
-mais la probabilité de dépasser 40 °C va de 0,1 % (référence, qui ignore l'incertitude sur la pente) à 5,9 %
-(quantiles). C'est logique : 40 °C est loin de tout ce qui a été observé (34,2 °C au maximum), donc le résultat dépend
-surtout de la forme de la queue de la loi, que 86 années ne suffisent pas à bien connaître. Il faut aussi garder en
-tête que le CO2 est la seule entrée du modèle (pas de circulation atmosphérique, ni d'océan) et qu'on extrapole
-jusqu'à 946 ppm alors qu'on n'a observé que 310 à 428 ppm.
+Il faut prendre ces chiffres avec prudence : 40 °C est loin de tout ce qu'on a observé (34,2 °C au maximum), et on
+extrapole jusqu'à 946 ppm alors qu'on n'a vu que 310 à 428 ppm. Le CO2 est aussi la seule entrée du modèle.
 '''
 
 C['minima'] = r'''
-**Approche.** On reprend les mêmes modèles, mais la GEV, faite pour les maxima, est remplacée par le **bootstrap des
-résidus** de Reda : on ajuste la droite sur un rééchantillonnage des années, puis on ajoute un résidu tiré parmi les
-résidus observés, sans supposer de loi.
+**Approche.** On garde la même régression bayésienne : sur le test 2001-2025, c'est aussi la meilleure pour Tmin
+(CRPS 0,98 °C, voir le tableau plus haut).
 
 **Commentaire.** Le minimum annuel est encore moins lié au CO2 que le maximum ($r=0{,}15$) : il dépend surtout de
-quelques vagues de froid (−6,6 °C en 1987). En validation, la référence, Bayes et le bootstrap des résidus sont à
-moins de 0,01 °C les uns des autres, donc on garde la **référence**, le plus simple. Sur le test, c'est cette fois Bayes
-qui fait le mieux (0,98 °C contre 1,14 °C) : la validation ne pouvait pas le voir, les écarts sur 1971-2000 étaient trop
-petits.
-
-Les minima remontent avec le CO2 : la médiane 2100 vaut −0,4 °C (SSP1-2.6), 0,4 °C (SSP2-4.5) et 2,2 °C (SSP5-8.5).
-La probabilité que le minimum de 2100 soit sous 0 °C passe de 59 % à 13 %. Il gèlera encore au moins une fois d'ici
-2100 dans tous les scénarios (100 % des trajectoires), mais les hivers sans gel deviennent fréquents avec SSP5-8.5.
-Les autres modèles donnent des résultats proches (médiane de 2,2 à 3,1 °C, P(< 0 °C) de 13 % à 28 % pour SSP5-8.5).
+quelques vagues de froid (−6,6 °C en 1987). Les minima remontent quand même avec le CO2 : la médiane 2100 vaut
+−0,4 °C (SSP1-2.6), 0,5 °C (SSP2-4.5) et 2,5 °C (SSP5-8.5). La probabilité que le minimum de 2100 soit sous 0 °C passe
+de 58 % à 17 %. Il gèlera encore au moins une fois d'ici 2100 dans tous les scénarios (100 % des trajectoires), mais
+les hivers sans gel deviennent fréquents avec SSP5-8.5.
 '''
 
 C['conclusion'] = r'''
 # Conclusion
 
-- **Le passé.** Brest a un cycle saisonnier doux, typique d'un climat océanique. Les vagues de chaleur (au-dessus du
-  quantile 90 % de la saison) sont devenues bien plus fréquentes depuis les années 1980, et la plus intense est celle
-  de juillet 2022.
+- **Le passé.** À Brest, l'écart entre l'hiver et l'été est faible (environ 9 °C). Les vagues de chaleur sont devenues
+  bien plus fréquentes : environ 3 par an dans les années 1960-1970, 12 par an sur 2020-2025. La plus intense est
+  celle de juillet 2022.
 - **Le futur.** Le lien entre les extrêmes annuels et le CO2 est faible d'une année à l'autre, mais net sur la
-  tendance. Parmi nos cinq modèles, la régression bayésienne est retenue pour les maxima : elle est la meilleure en
-  validation et sur 2001-2025 (CRPS 1,57 °C contre 1,70 °C pour la référence). En 2100, la médiane du maximum annuel
-  va de 26,5 °C (SSP1-2.6) à 32,8 °C (SSP5-8.5). Dépasser 40 °C reste rare une année donnée (1,5 % en 2100 avec
-  SSP5-8.5), mais atteint 7,7 % sur l'ensemble 2026-2100 dans ce scénario. Pour les minima, le gel devient moins
-  fréquent sans disparaître.
-- **Limites.** 86 années, c'est peu pour connaître la queue de la loi : la probabilité de 40 °C en 2100 (SSP5-8.5)
-  va de 0,1 % à 5,9 % selon le modèle. Le CO2 est notre seule variable explicative, et les scénarios nous font extrapoler bien au-delà
-  des concentrations observées.
+  tendance. Parmi les modèles du groupe, la régression bayésienne est la meilleure sur 2001-2025 (CRPS 1,57 °C contre
+  1,70 °C pour la référence). En 2100, la médiane du maximum annuel va de 26,5 °C (SSP1-2.6) à 32,8 °C (SSP5-8.5).
+  Dépasser 40 °C reste rare une année donnée (1,5 % en 2100 avec SSP5-8.5), mais atteint 7,8 % sur l'ensemble
+  2026-2100 dans ce scénario. Pour les minima, le gel devient moins fréquent sans disparaître.
+- **Limites.** 86 années, c'est peu pour connaître les valeurs extrêmes. Le CO2 est notre seule variable explicative,
+  et les scénarios nous font extrapoler bien au-delà des concentrations observées.
 '''
