@@ -108,8 +108,8 @@ extrapole jusqu'à 946 ppm alors qu'on n'a vu que 310 à 428 ppm. Le CO2 est aus
 '''
 
 C['minima'] = r'''
-**Approche.** On refait la même étude avec la même régression bayésienne : sur le test 2001-2025, c'est aussi la
-meilleure méthode pour Tmin (CRPS 0,98 °C, voir le tableau de la question 3). Le prof ne donne pas de seuil pour Tmin :
+**Approche.** On refait la même étude avec la même régression bayésienne : sur le test 2001-2025, c'est aussi
+elle qui a le meilleur CRPS pour Tmin (0,98 °C, voir le tableau de la question 3). Le prof ne donne pas de seuil pour Tmin :
 on prend **0 °C**, le seuil du gel. Sur 1940-2025, le minimum annuel a été négatif 52 années sur 86.
 
 **Commentaire.** Tmin varie de −6,6 °C (1987) à 2,6 °C (2019). Contrairement à Tmax, la moyenne sur 11 ans ne montre
@@ -132,7 +132,7 @@ C['conclusion'] = r'''
   bien plus fréquentes : environ 3 par an dans les années 1960-1970, 12 par an sur 2020-2025. La plus intense est
   celle de juillet 2022.
 - **Le futur.** Le lien entre les extrêmes annuels et le CO2 est faible d'une année à l'autre, mais net sur la
-  tendance. Parmi les modèles du groupe, la régression bayésienne est la meilleure sur 2001-2025 (CRPS 1,57 °C contre
+  tendance. Parmi les modèles du groupe, la régression bayésienne a le meilleur CRPS sur 2001-2025 (1,57 °C contre
   1,70 °C pour la référence). En 2100, la médiane du maximum annuel va de 26,5 °C (SSP1-2.6) à 32,8 °C (SSP5-8.5).
   Dépasser 40 °C reste rare une année donnée (1,5 % en 2100 avec SSP5-8.5), mais atteint 7,8 % sur l'ensemble
   2026-2100 dans ce scénario. Pour les minima, le gel devient moins fréquent sans disparaître.

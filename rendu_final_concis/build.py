@@ -139,7 +139,8 @@ METHODE = r'''
 
 Pour cette partie, nous avons organisé une petite compétition au sein du groupe : chaque membre a proposé et codé sa
 propre méthode de prédiction probabiliste, puis toutes les méthodes ont été évaluées selon le même protocole. Seule la
-meilleure est présentée en détail dans la suite ; les autres sont résumées ci-dessous avec leur score.
+meilleure selon ce protocole est présentée en détail dans la suite ; les autres sont résumées ci-dessous avec leur
+score.
 
 Le protocole est le suivant :
 
@@ -195,11 +196,16 @@ redonne l'erreur absolue.
 
 Les scores d'Elias viennent de son propre code (entraîné sur GPU) ; les autres ont été recalculés avec le même
 protocole. Ils dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre), mais le classement
-de la régression bayésienne ne change pas : elle est la meilleure pour Tmax et pour Tmin (la GEV est très proche pour
+de la régression bayésienne ne change pas : elle a le meilleur CRPS pour Tmax et pour Tmin (la GEV est très proche pour
 Tmin). Les réseaux de neurones ne la battent pas : pour Tmax, ils font même moins bien que la référence, et pour Tmin,
 la diffusion d'Elias fait mieux que la référence mais reste derrière. Avec seulement 61 années pour apprendre, une
-méthode plus flexible n'a pas assez de données pour trouver mieux qu'une loi simple. Le meilleur modèle n'est donc pas
-le plus compliqué.
+méthode plus flexible n'a pas assez de données pour trouver mieux qu'une loi simple : ici, le modèle le plus simple
+est celui qui prédit le mieux.
+
+Attention, « meilleur » veut dire ici meilleur CRPS sur 2001-2025, pas meilleur modèle dans l'absolu. Le CRPS juge
+toute la loi, mais surtout son centre : il dit peu de chose sur la queue de la loi, qui compte pour la question des
+40 °C, et 25 années de test, c'est peu. C'est donc le critère qui nous paraît le plus raisonnable pour choisir, mais
+d'autres choix restaient défendables (par exemple la GEV, faite pour les extrêmes, et très proche pour Tmin).
 C'est la régression bayésienne qu'on développe dans la suite.
 
 Une fois la méthode choisie, on la **réentraîne sur toutes les années 1940-2025** pour faire les prédictions jusqu'en
