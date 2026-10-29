@@ -159,10 +159,11 @@ donc, à petite échelle, la difficulté de 2100 : prédire pour un CO2 jamais o
 - **Loi des valeurs extrêmes, GEV** (Reda) : la loi que donne la théorie pour le maximum d'un grand nombre de valeurs
   (ici, le maximum de toutes les températures de l'année). Le centre de la loi dépend du CO2. Pour Tmin, on applique la même
   méthode à $-T_{\min}$, car le minimum est le maximum des valeurs opposées.
-- **Réseaux génératifs et diffusion** (Elias) : des réseaux de neurones qui apprennent à générer des températures,
-  entraînés à minimiser le CRPS. Il a retenu un générateur direct pour Tmax et un **modèle de diffusion** pour Tmin
-  (le type de réseau suggéré par le sujet). Il a aussi testé un DDPM classique, abandonné car il produisait des valeurs
-  absurdes pour Tmin (jusqu'à −1 933 °C).
+- **Modèles de diffusion** (Elias) : le type de réseau suggéré par le sujet. Une droite en $\ln(\mathrm{CO_2})$ sert
+  d'« ancre », et un réseau de neurones génère les écarts à cette droite par diffusion : il part d'un bruit pur et le
+  « débruite » pour obtenir un tirage. Elias a testé plusieurs versions : un DDPM classique (abandonné, car il
+  produisait des valeurs absurdes pour Tmin, jusqu'à −1 933 °C), une diffusion entraînée au CRPS, et la même avec une
+  ancre incertaine (la droite elle-même est tirée au hasard).
 - **Régression quantile** (Yazid) : au lieu de supposer une loi, on ajuste 99 droites, une par quantile (1 %, 2 %, …,
   99 %).
 - **Réseau à mélange de gaussiennes** (Diae) : un réseau de neurones qui donne, pour chaque valeur du CO2, un mélange
@@ -188,19 +189,20 @@ redonne l'erreur absolue.
 | Méthode | Proposée par | CRPS Tmax (°C) | CRPS Tmin (°C) |
 |:--|:--|:-:|:-:|
 | **Régression bayésienne** | Christian | **1,57** | **0,98** |
+| Diffusion avec ancre incertaine | Elias | 1,65 | 0,99 |
 | Loi des valeurs extrêmes (GEV) | Reda | 1,68 | 0,99 |
 | Référence | — | 1,70 | 1,14 |
-| Réseaux génératifs et diffusion | Elias | 1,75 | 1,03 |
+| Diffusion entraînée au CRPS | Elias | 1,70 | 1,03 |
 | Régression quantile | Yazid | 1,81 | 1,07 |
 | Réseau à mélange de gaussiennes | Diae | 1,85 | 1,18 |
 
 Les scores d'Elias viennent de son propre code (entraîné sur GPU) ; les autres ont été recalculés avec le même
-protocole. Ils dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre), mais le classement
-de la régression bayésienne ne change pas : elle a le meilleur CRPS pour Tmax et pour Tmin (la GEV est très proche pour
-Tmin). Les réseaux de neurones ne la battent pas : pour Tmax, ils font même moins bien que la référence, et pour Tmin,
-la diffusion d'Elias fait mieux que la référence mais reste derrière. Avec seulement 61 années pour apprendre, une
-méthode plus flexible n'a pas assez de données pour trouver mieux qu'une loi simple : ici, le modèle le plus simple
-est celui qui prédit le mieux.
+protocole. Ils dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre). La régression
+bayésienne a le meilleur CRPS pour Tmax. Pour Tmin, elle est pratiquement à égalité avec la GEV et la diffusion avec
+ancre (0,98 à 0,99) : on garde alors la régression bayésienne, plus simple, ce qui permet aussi d'utiliser le même
+modèle pour Tmax et Tmin. Avec seulement 61 années pour apprendre, les réseaux de neurones ne font donc pas mieux
+qu'une méthode simple. On remarque aussi que la meilleure version de la diffusion est celle où la droite est
+incertaine : c'est la même idée que la régression bayésienne, et c'est ce qui l'améliore le plus.
 
 Attention, « meilleur » veut dire ici meilleur CRPS sur 2001-2025, pas meilleur modèle dans l'absolu. Le CRPS juge
 toute la loi, mais surtout son centre : il dit peu de chose sur la queue de la loi, qui compte pour la question des
@@ -210,23 +212,26 @@ d'autres choix restaient défendables (par exemple la GEV, faite pour les extrê
 **Ce que donnent les méthodes en 2100.** Pour vérifier ce choix autrement qu'avec le CRPS, on a aussi regardé ce que
 chaque méthode prédit pour Tmax en 2100 avec SSP5-8.5 (946 ppm), une fois réentraînée sur 1940-2025 :
 
-| Méthode | Médiane (°C) | Intervalle 5-95 % (°C) | P(au moins une année > 40 °C, 2026-2100) | Problème |
+| Méthode | Médiane (°C) | Intervalle 5-95 % (°C) | P(Tmax 2100 > 40 °C) | Problème |
 |:--|:-:|:-:|:-:|:--|
-| **Régression bayésienne** | 32,8 | 27,4 – 38,2 | 7,8 % | — |
-| GEV (Reda) | 31,4 | 26,2 – 37,1 | 7,9 % | — |
-| Générateur (Elias) | 32,6 | 29,8 – 37,0 | 4,6 % | — |
-| Référence | 32,8 | 29,2 – 36,4 | 0,4 % | trop sûre d'elle : une seule pente |
-| Régression quantile (Yazid) | 31,7 | 26,6 – 44,0 | 88 % | les 99 droites s'écartent |
-| Réseau à mélange (Diae) | 29,1 | 23,8 – 34,7 | 2,7 % | ne suit plus le CO2 |
+| **Régression bayésienne** | 32,8 | 27,4 – 38,2 | 1,5 % | — |
+| Diffusion avec ancre incertaine (Elias) | 32,5 | 26,7 – 39,0 | 3,0 % | — |
+| Diffusion entraînée au CRPS (Elias) | 32,6 | 28,7 – 37,3 | 0,6 % | — |
+| GEV (Reda) | 31,4 | 26,2 – 37,1 | 0,8 % | — |
+| Référence | 32,8 | 29,2 – 36,4 | 0,01 % | trop sûre d'elle : une seule pente |
+| Régression quantile (Yazid) | 31,7 | 26,6 – 44,0 | 6,8 % | les 99 droites s'écartent |
+| Réseau à mélange (Diae) | 29,1 | 23,8 – 34,7 | 0,06 % | ne suit plus le CO2 |
 
-Trois méthodes posent problème quand on extrapole. La régression quantile diverge : ses 99 droites ont des pentes
-différentes et s'écartent loin des données, ce qui donne un quantile 95 % à 44 °C en 2100 (et des Tmin jusqu'à
-−19 °C, bien en dessous du record de −6,6 °C). Le réseau de Diae sature : sa médiane reste bloquée vers 29 °C dès
-2050, alors que le CO2 continue d'augmenter, car un réseau de neurones ne sait pas extrapoler en dehors de ce qu'il a
-vu. Et le DDPM d'Elias donnait des valeurs absurdes pour Tmin. La référence, elle, ne diverge pas, mais elle est trop
-confiante : avec une seule pente, elle donne 0,4 % au lieu de 7,8 %. La GEV et le générateur d'Elias restent
-plausibles, et leurs probabilités encadrent la nôtre. Le choix de la régression bayésienne est donc cohérent avec ce
-qu'on observe en 2100, pas seulement avec le CRPS.
+Les modèles de diffusion d'Elias et la GEV donnent des projections proches de la nôtre (médiane de 31,4 à 32,8 °C).
+Trois méthodes posent en revanche problème quand on extrapole. La régression quantile diverge : ses 99 droites ont
+des pentes différentes et s'écartent loin des données, ce qui donne un quantile 95 % à 44 °C en 2100, 88 % de
+chances de dépasser 40 °C au moins une fois d'ici 2100, et des Tmin jusqu'à −19 °C (le record est de −6,6 °C). Le
+réseau de Diae sature : sa médiane reste bloquée vers 29 °C dès 2050, alors que le CO2 continue d'augmenter, car un
+réseau de neurones ne sait pas extrapoler en dehors de ce qu'il a vu. Le DDPM d'Elias donnait, lui, des valeurs
+absurdes pour Tmin. Enfin, la référence ne diverge pas, mais elle est trop confiante : avec une seule pente, elle
+donne 0,01 % au lieu de 1,5 %. Le choix de la régression bayésienne est donc cohérent avec ce que les méthodes
+prédisent pour 2100, et pas seulement avec le CRPS.
+
 C'est la régression bayésienne qu'on développe dans la suite.
 
 Une fois la méthode choisie, on la **réentraîne sur toutes les années 1940-2025** pour faire les prédictions jusqu'en

@@ -108,8 +108,8 @@ extrapole jusqu'à 946 ppm alors qu'on n'a vu que 310 à 428 ppm. Le CO2 est aus
 '''
 
 C['minima'] = r'''
-**Approche.** On refait la même étude avec la même régression bayésienne : sur le test 2001-2025, c'est aussi
-elle qui a le meilleur CRPS pour Tmin (0,98 °C, voir le tableau de la question 3). Le prof ne donne pas de seuil pour Tmin :
+**Approche.** On refait la même étude avec la même régression bayésienne : sur le test 2001-2025, elle a aussi
+le meilleur CRPS pour Tmin (0,98 °C), pratiquement à égalité avec la GEV et la diffusion d'Elias (voir la question 3). Le prof ne donne pas de seuil pour Tmin :
 on prend **0 °C**, le seuil du gel. Sur 1940-2025, le minimum annuel a été négatif 52 années sur 86.
 
 **Commentaire.** Tmin varie de −6,6 °C (1987) à 2,6 °C (2019). Contrairement à Tmax, la moyenne sur 11 ans ne montre
