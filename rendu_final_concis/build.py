@@ -191,6 +191,10 @@ redonne l'erreur absolue.
 | Régression quantile | Yazid | 1,81 | 1,07 |
 | Réseau à mélange de gaussiennes | Diae | 1,85 | 1,18 |
 
+Elias a aussi testé des **modèles de diffusion**, comme le suggère le sujet : un DDPM classique et une diffusion
+entraînée au CRPS. Le DDPM produisait des valeurs absurdes pour Tmin (jusqu'à −1 933 °C), et la diffusion au CRPS
+obtient 1,03 °C sur Tmin : mieux que la référence, mais moins bien que la régression bayésienne.
+
 Ces scores dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre), mais le classement de
 la régression bayésienne ne change pas : elle est la meilleure pour Tmax et pour Tmin (la GEV est très proche pour
 Tmin). Les deux réseaux de neurones ne font pas vraiment mieux que la référence : avec seulement 61 années pour
