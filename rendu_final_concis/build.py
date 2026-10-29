@@ -196,8 +196,8 @@ redonne l'erreur absolue.
 | Régression quantile | Yazid | 1,81 | 1,07 |
 | Réseau à mélange de gaussiennes | Diae | 1,85 | 1,18 |
 
-Les scores d'Elias viennent de son propre code (entraîné sur GPU) ; les autres ont été recalculés avec le même
-protocole. Ils dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre). La régression
+Les méthodes à base de réseaux de neurones et la GEV ont été codées en PyTorch. Les scores d'Elias viennent de son
+propre code (entraîné sur GPU) ; les autres ont été recalculés avec le même protocole. Ils dépendent un peu du tirage aléatoire (environ ±0,03 °C d'une exécution à l'autre). La régression
 bayésienne a le meilleur CRPS pour Tmax. Pour Tmin, elle est pratiquement à égalité avec la GEV et la diffusion avec
 ancre (0,98 à 0,99) : on garde alors la régression bayésienne, plus simple, ce qui permet aussi d'utiliser le même
 modèle pour Tmax et Tmin. Avec seulement 61 années pour apprendre, les réseaux de neurones ne font donc pas mieux
@@ -383,6 +383,86 @@ plt.show()
 print(resume_2100(sims_max, 40).round(4).to_string())
 '''
 
+DIFFUSION_MD = r"""
+### Pour comparaison : le modèle de diffusion d'Elias (version courte)
+
+Le sujet propose les modèles de diffusion : voici une version courte, en PyTorch, de la meilleure diffusion d'Elias
+(avec ancre incertaine). On garde une droite $\mu(C)=a+b\ln C$ (l'« ancre »), et on note $z=(T-\mu)/e$ les écarts à
+la droite, divisés par leur écart-type $e$. Un petit réseau $g_\phi(u,s,\zeta)$ apprend à générer ces écarts :
+
+- **entraînement** : on abîme un écart observé avec du bruit, $u=(1-s)\,z+s\,\varepsilon$, avec un niveau de bruit
+  $s\sim\mathcal U(0,1)$ et $\varepsilon\sim\mathcal N(0,1)$. Le réseau propose $M=32$ écarts « propres »
+  $\hat z_m=g_\phi(u,s,\zeta_m)$, avec $\zeta_m\sim\mathcal N(0,1)$, et on minimise le CRPS de ces 32 propositions face
+  au vrai $z$ ;
+- **génération** : on part d'un bruit pur ($s=1$, $u\sim\mathcal N(0,1)$), un passage du réseau donne un écart $\hat z$,
+  et $T=a^{(k)}+b^{(k)}\ln C+e\,\hat z$, où la droite $(a^{(k)},b^{(k)})$ est tirée parmi 200 droites réajustées par
+  bootstrap (c'est l'ancre incertaine).
+"""
+
+DIFFUSION = r"""
+alea = np.random.default_rng(1)       # générateur à part, pour ne pas changer les tirages de la suite
+
+def ancre(x, t):
+    # droite des moindres carrés en ln(CO2), avec pente >= 0
+    b = max(np.polyfit(x, t, 1)[0], 0.0)
+    a = np.mean(t - b * x)
+    return a, b
+
+class Debruiteur(torch.nn.Module):
+    # g(u, s, zeta) : reçoit un écart abîmé par le bruit u, le niveau de bruit s et un hasard zeta,
+    # et propose un écart « propre » à la droite
+    def __init__(self):
+        super().__init__()
+        self.reseau = torch.nn.Sequential(torch.nn.Linear(3, 32), torch.nn.SiLU(),
+                                          torch.nn.Linear(32, 32), torch.nn.SiLU(), torch.nn.Linear(32, 1))
+    def forward(self, u, s, zeta):
+        return self.reseau(torch.stack([u, s, zeta], dim=-1)).squeeze(-1)
+
+def crps_ensemble(X, y):
+    # CRPS moyen d'ensembles X (lot, M) face aux valeurs y (lot) ; version sans biais pour M petit
+    M = X.shape[1]
+    ecart = (X - y[:, None]).abs().mean(1)
+    largeur = (X[:, :, None] - X[:, None, :]).abs().sum((1, 2)) / (2 * M * (M - 1))
+    return (ecart - largeur).mean()
+
+def entrainer_diffusion(x, t, pas=1500, M=32, B=200):
+    a, b = ancre(x, t)
+    r = t - a - b * x
+    e = r.std()
+    z = torch.tensor(r / e, dtype=torch.float32)                 # écarts réduits à la droite
+    torch.manual_seed(0)
+    g = Debruiteur()
+    opt = torch.optim.AdamW(g.parameters(), lr=1e-3, weight_decay=1e-4)
+    for _ in range(pas):
+        zb = z[torch.randint(len(z), (64,))]
+        s = torch.rand(64)                                       # niveau de bruit entre 0 et 1
+        u = (1 - s) * zb + s * torch.randn(64)                   # écart abîmé par le bruit
+        X = g(u[:, None].expand(-1, M), s[:, None].expand(-1, M), torch.randn(64, M))   # M propositions
+        perte = crps_ensemble(X, zb)
+        opt.zero_grad(); perte.backward(); opt.step()
+    # ancre incertaine : B droites réajustées sur des données rééchantillonnées (bootstrap des écarts)
+    droites = np.array([ancre(x, a + b * x + alea.choice(r, len(r))) for _ in range(B)])
+    return g, e, droites
+
+def tirer_diffusion(modele, x_futur, n=N):
+    g, e, droites = modele
+    with torch.no_grad():                                        # génération : bruit pur (s = 1), un passage
+        forme = (n, len(x_futur))
+        z = g(torch.randn(forme), torch.ones(forme), torch.randn(forme)).numpy()
+    a, b = droites[alea.integers(len(droites), size=n)].T
+    return a[:, None] + b[:, None] * x_futur + e * z
+
+# même test que pour la régression bayésienne : appris sur 1940-2000, noté sur 2001-2025
+for var in ['max', 'min']:
+    m = entrainer_diffusion(x[avant], y[var].to_numpy()[avant])
+    print(f'Diffusion, CRPS T{var} 2001-2025 : {crps(tirer_diffusion(m, x[apres]), y[var].to_numpy()[apres]):.2f} °C')
+
+# Tmax en 2100 avec SSP5-8.5, après réentraînement sur 1940-2025
+m = entrainer_diffusion(x, y['max'].to_numpy())
+t2100 = tirer_diffusion(m, np.log(yearly_future_co2['ssp5-8.5'].to_numpy()))[:, -1]
+print(f'Tmax 2100 (SSP5-8.5) : médiane {np.median(t2100):.1f} °C, P(> 40 °C) = {np.mean(t2100 > 40):.1%}')
+"""
+
 MINIMA = r'''
 # même étude que pour Tmax : d'abord les observations 1940-2025
 plt.plot(y['annee'], y['min'], 'o-', ms=3, lw=1, color='tab:blue', label='Minimum annuel')
@@ -419,7 +499,8 @@ todo = iter([
     [code(NUAGE), com('nuage')],
     [code(TMAX), com('tmax')],
     [code(CORREL), com('correl')],
-    [md(METHODE), code(MODELES), code(COMPARAISON), com('comparaison'), code(PROJ), com('proj')],
+    [md(METHODE), code(MODELES), code(COMPARAISON), com('comparaison'),
+     md(DIFFUSION_MD), code(DIFFUSION), com('diffusion'), code(PROJ), com('proj')],
     [code(DIST), com('dist')],
     [code(MINIMA), com('minima'), com('conclusion')],
 ])

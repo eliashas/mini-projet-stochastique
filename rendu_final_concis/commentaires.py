@@ -82,6 +82,15 @@ C['comparaison'] = r'''
 pour le modèle de référence.
 '''
 
+C['diffusion'] = r'''
+**Commentaire.** Cette version courte (1 500 pas d'entraînement, quelques secondes sur CPU) obtient 1,67 °C pour Tmax
+et 1,00 °C pour Tmin, proche du code complet d'Elias (1,65 et 0,99). Elle reste derrière la régression bayésienne pour
+Tmax (1,57 °C) et à peu près à égalité pour Tmin. En 2100 avec SSP5-8.5, elle donne une médiane de 33,1 °C et une
+probabilité de dépasser 40 °C de 3,3 %, proches de nos résultats. Un réseau plus complexe ne change donc pas la
+conclusion : avec 86 années, c'est surtout l'incertitude sur la droite qui compte, et la régression bayésienne la
+traite de façon plus simple et plus directe.
+'''
+
 C['proj'] = r'''
 **Commentaire.** Les trois scénarios partent du même niveau en 2026 (médiane d'environ 27 °C) puis s'écartent. Avec
 SSP1-2.6, le CO2 redescend à 400 ppm et la médiane reste à 26,5 °C en 2100. Avec SSP2-4.5, elle atteint 28,5 °C, et avec
