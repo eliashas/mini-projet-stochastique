@@ -108,14 +108,21 @@ extrapole jusqu'à 946 ppm alors qu'on n'a vu que 310 à 428 ppm. Le CO2 est aus
 '''
 
 C['minima'] = r'''
-**Approche.** On garde la même régression bayésienne : sur le test 2001-2025, c'est aussi la meilleure pour Tmin
-(CRPS 0,98 °C, voir le tableau plus haut).
+**Approche.** On refait la même étude avec la même régression bayésienne : sur le test 2001-2025, c'est aussi la
+meilleure méthode pour Tmin (CRPS 0,98 °C, voir le tableau de la question 3). Le prof ne donne pas de seuil pour Tmin :
+on prend **0 °C**, le seuil du gel. Sur 1940-2025, le minimum annuel a été négatif 52 années sur 86.
 
-**Commentaire.** Le minimum annuel est encore moins lié au CO2 que le maximum ($r=0{,}15$) : il dépend surtout de
-quelques vagues de froid (−6,6 °C en 1987). Les minima remontent quand même avec le CO2 : la médiane 2100 vaut
-−0,4 °C (SSP1-2.6), 0,5 °C (SSP2-4.5) et 2,5 °C (SSP5-8.5). La probabilité que le minimum de 2100 soit sous 0 °C passe
-de 58 % à 17 %. Il gèlera encore au moins une fois d'ici 2100 dans tous les scénarios (100 % des trajectoires), mais
-les hivers sans gel deviennent fréquents avec SSP5-8.5.
+**Commentaire.** Tmin varie de −6,6 °C (1987) à 2,6 °C (2019). Contrairement à Tmax, la moyenne sur 11 ans ne montre
+pas de tendance nette jusqu'en 2000 : la moyenne vaut −0,7 °C sur 1940-1979 comme sur 1980-2025, avec des hivers très
+froids au milieu des années 1980 (−5,5 °C en 1985, −6,6 °C en 1987). Elle remonte seulement depuis 2000, jusqu'à
+environ +0,3 °C autour de 2020. Le lien avec le CO2 est donc encore plus faible que pour Tmax ($r=0{,}15$).
+
+Dans les projections, les minima remontent avec le CO2 : la médiane 2100 vaut −0,4 °C (SSP1-2.6), 0,5 °C (SSP2-4.5)
+et 2,5 °C (SSP5-8.5). La probabilité que le minimum de 2100 soit sous 0 °C passe de 58 % à 17 %. Il gèlera encore au
+moins une fois entre 2026 et 2100 dans tous les scénarios (100 % des tirages), mais les hivers sans gel deviennent
+fréquents avec SSP5-8.5. Sur l'histogramme, la loi de 2100 se décale vers la droite et s'élargit quand le CO2
+augmente, comme pour Tmax. Comme le lien avec le CO2 est faible sur le passé, ces projections sont moins sûres que
+celles de Tmax.
 '''
 
 C['conclusion'] = r'''

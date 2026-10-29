@@ -345,9 +345,30 @@ print(resume_2100(sims_max, 40).round(4).to_string())
 '''
 
 MINIMA = r'''
-print(f"Corrélation Tmin / ln(CO2) : {y['min'].corr(np.log(y['co2'])):.2f}\n")
+# même étude que pour Tmax : d'abord les observations 1940-2025
+plt.plot(y['annee'], y['min'], 'o-', ms=3, lw=1, color='tab:blue', label='Minimum annuel')
+plt.plot(y['annee'], y['min'].rolling(11, center=True).mean(), lw=2.5, color='k', label='Moyenne glissante sur 11 ans')
+plt.xlabel('Année')
+plt.ylabel('Température (°C)')
+plt.title('Température minimale annuelle à Brest (1940-2025)')
+plt.legend()
+plt.show()
+print('Corrélation Tmin / ln(CO2) :', round(y['min'].corr(np.log(y['co2'])), 2))
+
+# projections avec le même modèle, et seuil de 0 °C (le gel) au lieu de 40 °C
 sims_min = projeter('min')
 tracer('min', sims_min, 0)
+
+plt.figure(figsize=(9, 4))
+for s, couleur in SSP.items():
+    plt.hist(sims_min[s][:, -1], np.arange(-10, 14, 0.25), density=True, histtype='stepfilled', alpha=0.35,
+             color=couleur, label=s.upper())
+plt.axvline(0, color='grey', ls='--', label='0 °C')
+plt.xlabel('Tmin annuelle en 2100 (°C)')
+plt.ylabel('Densité de probabilité (1/°C)')
+plt.title('Loi de la Tmin en 2100 (10 000 tirages)')
+plt.legend()
+plt.show()
 print(resume_2100(sims_min, 0, au_dessus=False).round(3).to_string())
 '''
 
