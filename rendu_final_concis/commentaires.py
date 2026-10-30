@@ -10,6 +10,8 @@ The five students are:
 - Reda El Mekkaoui
 - Mohamed Yazid Samrani
 - Sefyani Diae
+
+**Utilisation de l’IA.** Comme le proposait le sujet, nous avons utilisé des assistants d’IA (ChatGPT, Claude) pour nous aider à concevoir et écrire le code, explorer des méthodes de prévision et relire le notebook. Nous avons exécuté, vérifié et compris tous les calculs, et les choix de méthode, les résultats et leur interprétation sont les nôtres.
 '''
 
 C['saison'] = r'''

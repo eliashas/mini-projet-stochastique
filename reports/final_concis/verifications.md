@@ -161,3 +161,10 @@ formules bayésiennes sont strictement inchangés. Les chiffres sont arrondis à
 partir des sorties existantes ; aucun entraînement supplémentaire n’a été lancé.
 Le ZIP a été régénéré et ses quatre fichiers vérifiés. Preuve :
 `edition_conclusion.json`.
+
+
+## Déclaration d’utilisation de l’IA
+
+Le paragraphe fourni par le groupe a été ajouté au début, après la liste des
+membres. Seule cette cellule de texte change : le code, les sorties et les
+autres cellules restent identiques. Le ZIP a été régénéré et vérifié.
