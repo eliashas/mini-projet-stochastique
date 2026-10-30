@@ -205,7 +205,7 @@ et dispersée. On calcule ce score pour chaque année, puis on prend la moyenne.
 Une prévision déterministe redonne l'erreur absolue. Les 10 000 tirages décrivent la loi prédite ; ils ne
 remplacent pas les 25 années de test. On complète le CRPS par un score de queue et la couverture des intervalles.
 
-## La régression bayésienne de Christian
+## La régression bayésienne
 
 **Notations.** $T_t$ est le Tmax de l'année $t$ (°C), $x_t=\ln(C_t)$ où $C_t$ est le CO2 de l'année (ppm), et
 $T=(T_{1940},\dots,T_{2025})$ la liste des $n=86$ valeurs observées. Le signe « $\mid$ » se lit « sachant » et
