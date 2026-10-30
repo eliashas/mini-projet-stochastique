@@ -5,114 +5,64 @@ n'est nécessaire pour l'exécuter dans Colab.
 """
 
 INTRO = r'''
-## La diffusion : apprendre la distribution des fluctuations
+## La diffusion distributionnelle
 
-Une température annuelle dépend d'une tendance climatique et des conditions météo de l'année. On conserve
-une tendance simple et on confie au réseau la distribution des écarts à cette tendance :
+**Notations.** On reprend $T_t$ (température annuelle, °C) et $C_t$ (CO₂, ppm). L'échelle $e$ est
+l'écart-type des résidus de la droite, calculé sur l'entraînement. Le résidu réduit $z_t$ est sans unité.
 
-$$T_t=a+b\ln C_t+e\,z_t,\qquad
-z_t=\frac{T_t-a-b\ln C_t}{e}.$$
+**Le modèle.** On conserve la même tendance logarithmique, mais le réseau apprend la distribution des fluctuations :
 
-$C_t$ est la concentration en CO₂ (ppm), $T_t$ la température (°C) et $e$ l'écart-type des résidus (°C).
-L'ancre $(a,b)$ est ajustée par moindres carrés, avec $b\geq0$. L'échelle $e$ est calculée sur les mêmes années.
-Le résidu réduit $z_t$ est sans unité. **Le CO₂ agit par l'ancre** ; le réseau ne reçoit pas directement le CO₂.
-On suppose donc que la forme de la distribution des fluctuations reste stable dans le futur. C'est une
-hypothèse forte, particulièrement pour les extrêmes.
+$$T_t=a+b\ln C_t+e\,z_t,\qquad z_t=\frac{T_t-a-b\ln C_t}{e}.$$
 
-### Du résidu bruité à une distribution
+Le CO₂ agit par l'ancre $(a,b)$, ajustée avec $b\geq0$. Le réseau ne reçoit pas directement le CO₂ :
+on suppose que la distribution des fluctuations reste stable dans le futur.
 
-Pendant l'entraînement, on choisit un résidu historique $z$ et on le mélange avec un bruit indépendant :
+**Pourquoi une diffusion ?** Une régression quadratique apprend surtout une moyenne. Ici, on cherche à générer
+une distribution, dont la forme n'est pas imposée gaussienne. On entraîne un débruiteur stochastique à différents
+niveaux de bruit, suivant les diffusions distributionnelles de
+[De Bortoli et al. (2025)](https://proceedings.mlr.press/v267/de-bortoli25b.html) et
+[Park et al. (2026, prépublication)](https://arxiv.org/abs/2609.38632).
 
-$$s\sim\mathcal U(0,1),\quad \varepsilon\sim\mathcal N(0,1),\qquad
-u=(1-s)z+s\varepsilon.$$
+**L'apprentissage.** Un résidu historique $z$ est mélangé à un bruit indépendant :
 
-À $s=0$, le réseau voit le vrai résidu ; à $s=1$, il ne voit que du bruit. Pour chaque couple $(u,s)$,
-il propose $M=32$ résidus à l'aide de 32 variables aléatoires indépendantes :
+$$u=(1-s)z+s\varepsilon,\qquad s\sim\mathcal U(0,1),\quad\varepsilon\sim\mathcal N(0,1).$$
 
-$$\widehat z_m=g_\phi(u,s,\zeta_m),\qquad \zeta_m\overset{\mathrm{iid}}\sim\mathcal N(0,1).$$
+Le réseau propose $M=32$ résidus $\widehat z_m=g_\phi(u,s,\zeta_m)$, avec des $\zeta_m\sim\mathcal N(0,1)$
+indépendants. Les propositions partagent le même $(u,s)$. On minimise leur CRPS face au vrai résidu,
+après retour aux °C. L'estimateur d'entraînement mélange 95 % de CRPS *fair* et 5 % de CRPS empirique
+(*almost fair*, [Lang et al., 2024](https://arxiv.org/abs/2412.15832)). L'architecture est un MLP
+$3\to32\to32\to1$, avec activations SiLU, soit **1 217 paramètres**.
 
-Les 32 propositions partagent **le même résidu bruité et le même niveau de bruit**. On évalue leur distribution
-face au vrai résidu. Une régression quadratique apprendrait surtout une moyenne conditionnelle ; le CRPS
-permet d'apprendre aussi la dispersion. L'architecture est un petit MLP :
+**Prédiction par Monte-Carlo.** Pour prédire, on prend $s=1$ : le réseau reçoit du bruit pur et produit un résidu
+en un passage. La variante D3 ajoute l'incertitude de l'ancre : on rééchantillonne les résidus par blocs de trois
+années, à CO₂ fixé, puis on réajuste 500 droites. Un tirage s'écrit :
 
-$$ (u,s,\zeta)\longrightarrow 32\ \mathrm{SiLU}\longrightarrow32\ \mathrm{SiLU}\longrightarrow\widehat z.$$
+$$T_t^{(k)}=a^{(k)}+b^{(k)}\ln C_t+e\,g_\phi(\varepsilon_t^{(k)},1,\zeta_t^{(k)}).$$
 
-Cela représente **1 217 paramètres**. Pour générer une année future, on utilise $s=1$ : le vrai résidu n'est
-plus une entrée. Un passage dans le réseau donne un tirage, puis on revient aux degrés Celsius avec l'ancre.
+Une trajectoire conserve sa droite et son réseau, avec de nouveaux bruits chaque année. Le bootstrap ne
+réajuste pas le réseau : il représente seulement l'incertitude sur la tendance.
 
-Cette adaptation reprend l'idée des **diffusions distributionnelles** de
-[De Bortoli et al. (ICML, 2025)](https://proceedings.mlr.press/v267/de-bortoli25b.html), et l'entraînement
-avec tâches de débruitage de [Park et al. (2026, prépublication)](https://arxiv.org/abs/2609.38632).
-Elle conserve une génération en un passage au niveau de bruit maximal. Le DDPM classique apprend un bruit
-et déroule une chaîne de débruitage ; c'est une autre variante, étudiée au début du projet.
+**Variantes.** On compare quatre versions du même débruiteur :
 
-### Fonction de coût et variante pour les extrêmes
+| Variante | Coût d'apprentissage | Ancre |
+|:--|:--|:--|
+| D1 | CRPS | Fixe |
+| D2 | CRPS + $0{,}5\,\mathrm{twCRPS}$ | Fixe |
+| D3 | CRPS | Bootstrap |
+| D4 | CRPS + $0{,}5\,\mathrm{twCRPS}$ | Bootstrap |
 
-Pour $M$ propositions de température $X_1,\ldots,X_M$ et une observation $y$, on utilise à l'entraînement :
-
-$$\widehat S_\alpha(X,y)=\frac1M\sum_m|X_m-y|
--\left(\frac{\alpha}{M(M-1)}+\frac{1-\alpha}{M^2}\right)
-\sum_{i<j}|X_i-X_j|,\qquad \alpha=0{,}95.$$
-
-Ce mélange des estimateurs *fair* et empirique, appelé *almost fair CRPS*, limite l'effet du petit ensemble
-d'entraînement. Il est utilisé dans [AIFS-CRPS (Lang et al., 2024)](https://arxiv.org/abs/2412.15832).
-Pour évaluer les modèles, on garde le CRPS empirique usuel avec 10 000 tirages.
-
-La variante pondérée ajoute un score sur la queue de distribution :
-
-$$\mathcal L=\widehat S_{0.95}(X,T)+\lambda\widehat S_{0.95}(v(X),v(T)),\qquad
-v(x)=\begin{cases}\max(x,h)&\text{pour Tmax},\\\min(x,h)&\text{pour Tmin}.\end{cases}$$
-
-Le seuil $h$ est le quantile 80 % de Tmax, ou 20 % de Tmin, **calculé sur l'entraînement seulement**.
-Le second terme est un *threshold-weighted CRPS* (twCRPS). Toutes les années contribuent, même celles qui
-ne dépassent pas le seuil. Le poids $\lambda=0{,}5$ vient de la validation du projet ; il ne dépend pas du test.
-Ce score répond à une question plus ciblée que le CRPS global : il n'est pas une meilleure métrique dans l'absolu.
-La transformation par seuil est décrite dans la [documentation des scores pondérés](https://scoringrules.readthedocs.io/en/latest/weighted_scores.html).
-
-### Incertitude de l'ancre
-
-Pour les variantes avec ancre incertaine, on rééchantillonne les résidus historiques par blocs circulaires
-de trois années, à CO₂ fixé, puis on réajuste 500 droites. Une température simulée devient :
-
-$$T_t^{(k)}=a^{(k)}+b^{(k)}\ln C_t+e\,\widehat z_t^{(k)}.$$
-
-La droite varie entre les trajectoires. Elle reste la même au fil des années d'une trajectoire.
-Le réseau et l'échelle $e$ ne sont pas réajustés pour chaque droite : ce bootstrap représente l'incertitude
-de la tendance, sans représenter toute l'incertitude sur les paramètres du réseau.
+Le twCRPS est le CRPS après transformation $v(x)=\max(x,h)$ pour Tmax, ou $\min(x,h)$ pour Tmin.
+Le seuil $h$ est le quantile 80 % / 20 % calculé sur l'entraînement. Toutes les années contribuent.
+Cette pondération cible les extrêmes ; le CRPS global reste le critère principal.
 '''
 
 PROTOCOLE = r'''
-### Les variantes et leur validation
+**Validation.** On entraîne jusqu'en 1970, 1980 et 1990, puis on valide sur les dix années suivantes,
+avec trois graines (0, 1, 2). L'ancre, l'échelle et les seuils sont réajustés dans chaque entraînement.
+La sélection enregistrée est D3 pour Tmax et D1 pour Tmin ; les résultats communs figurent dans le tableau précédent.
 
-| Nom | Distribution des fluctuations | Ancre |
-|:--|:--|:--|
-| C0 | Générateur au CRPS, sans tâches de débruitage | Fixe |
-| D0 | DDPM classique, 100 pas de débruitage | Fixe |
-| D1 | Débruiteur stochastique au CRPS | Fixe |
-| D2 | D1 avec le score supplémentaire sur les extrêmes | Fixe |
-| D3 | Même réseau que D1 | Bootstrap |
-| D4 | Même réseau que D2 | Bootstrap |
-
-C0 sert à isoler l'apport des tâches de débruitage. D1/D2 isolent l'effet de la pondération des extrêmes ;
-D1/D3 et D2/D4 isolent celui de l'ancre incertaine. D3 et D4 ne nécessitent pas de nouveau réseau.
-
-Les expériences du projet utilisent trois découpages chronologiques :
-
-| Entraînement | Validation |
-|:--|:--|
-| 1940–1970 | 1971–1980 |
-| 1940–1980 | 1981–1990 |
-| 1940–1990 | 1991–2000 |
-
-À chaque découpage, l'ancre, l'échelle, les seuils et le bootstrap sont calculés uniquement sur l'entraînement.
-Le score de validation est calculé **en mode génération**, à $s=1$, sans résidu de l'année à prédire.
-Trois graines (0, 1, 2) sont utilisées, puis leurs tirages sont réunis dans un ensemble de 10 000 membres.
-Les mêmes blocs de validation ont servi à régler les modèles et à les comparer : ce n'est pas une validation imbriquée.
-
-Les tableaux suivants reprennent les expériences communes enregistrées dans le dépôt. Le test 2001–2025
-avait déjà été consulté pendant le projet ; ses résultats sont donc une comparaison rétrospective.
-La sélection enregistrée repose sur la validation : **D3 pour Tmax, D1 pour Tmin**.
-Bayes obtient ensuite le meilleur CRPS global observé sur le test parmi ces méthodes.
+Deux essais supplémentaires sont conservés dans les expériences détaillées : C0, générateur sans débruitage,
+et un DDPM classique. Ce dernier a été écarté après des Tmin allant jusqu'à −1 933 °C dans la configuration testée.
 '''
 
 ARCHIVES_COMMENTAIRE = r'''
@@ -261,17 +211,9 @@ def tirer_diffusion(suite, x_futur, n=N, bootstrap=True, seed=8200):
 '''
 
 EXECUTION_MD = r'''
-### Réexécution dans ce notebook
-
-Le code suivant réentraîne D1 et D2 avec trois graines pour Tmax et Tmin. D3 et D4 utilisent ensuite les mêmes
-réseaux avec le bootstrap. Les durées sont fixées à partir de la validation du projet : 1 250 / 750 mises à jour
-pour D1 / D2 de Tmax, 1 500 / 1 250 pour Tmin. AdamW utilise un taux de $10^{-3}$, une pénalité sur les poids
-de $10^{-4}$, des lots de 64 années rééchantillonnées et un gradient limité à une norme de 1.
-
-La courbe ci-dessous est une réexécution sur le dernier découpage (1940–1990 / 1991–2000), avec une seule graine.
-Elle sert à observer l'apprentissage ; elle ne change pas les réglages retenus. Le coût d'entraînement utilise
-des résidus partiellement connus, tandis que la validation part d'un bruit pur : leurs valeurs ne se comparent
-pas directement. Les scores de la réexécution peuvent varier avec le matériel, PyTorch et les tirages Monte-Carlo.
+**Entraînement.** Le code utilise PyTorch sur GPU si disponible, AdamW ($10^{-3}$), des lots de 64 et
+32 propositions par observation. Les durées sont fixées par la validation : D1/D2, 1 250/750 mises à jour
+pour Tmax et 1 500/1 250 pour Tmin. La courbe du dernier découpage sert uniquement de diagnostic.
 '''
 
 CODE_EXECUTION = r'''
@@ -323,19 +265,12 @@ display(scores_execution.round(3))
 '''
 
 EXECUTION_COMMENTAIRE = r'''
-Sur le dernier découpage, le coût d'entraînement descend d'environ 0,91 à 0,73 °C. Le CRPS de validation
-atteint son minimum vers 500 mises à jour, puis remonte et fluctue. Continuer à réduire le coût d'entraînement
-n'améliore donc pas forcément les prédictions. La durée de 1 250 mises à jour retenue pour Tmax vient de
-l'ensemble des validations du projet, et non du seul minimum de cette courbe.
+**Commentaire.** Le coût d'entraînement baisse, mais le CRPS de validation remonte après environ
+500 mises à jour : entraîner plus longtemps n'améliore pas forcément les prédictions. Ces deux scores
+correspondent à des tâches différentes, débruitage et génération depuis un bruit pur.
 
-Les tableaux distinguent les résultats archivés de la réexécution qui vient d'être faite. Les modèles ont la même
-architecture et les mêmes réglages, mais les derniers millièmes ne sont pas un objectif à reproduire sur tous les GPU.
-L'apport du bootstrap et le classement des variantes se lisent avec la variabilité de l'apprentissage et les
-25 observations disponibles. Un petit écart ne suffit pas à établir une supériorité générale.
-
-La simplicité de Bayes est un avantage avec peu d'observations. Le nombre d'années peut contribuer à expliquer
-l'écart avec les réseaux, mais cette expérience ne permet pas d'en isoler la cause. La diffusion reste utile ici
-pour relâcher l'hypothèse de fluctuations gaussiennes et étudier la sensibilité des queues de distribution.
+Pour Tmax, le bootstrap améliore le CRPS d'environ 1,70 à 1,65 °C. La pondération des extrêmes apporte peu
+ici. Bayes garde le meilleur CRPS global test ; les écarts restent à interpréter avec seulement 25 années.
 '''
 
 PROJECTION_MD = r'''

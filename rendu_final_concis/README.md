@@ -14,14 +14,16 @@ Pour modifier le notebook : changer le code dans `build.py` ou les commentaires 
 `python rendu_final_concis/executer.py`. Le constructeur remplace le notebook : intégrer les modifications des
 cellules dans les sources avant de le relancer. Les chiffres cités dans les commentaires doivent correspondre aux sorties.
 
-La section diffusion comprend les équations, les références, les variantes C0/D0/D1–D4, les validations
-chronologiques, les CRPS et twCRPS, la couverture des intervalles, une courbe d'apprentissage et les projections
-des deux méthodes. D1/D2 sont réentraînés pour trois graines ; D3/D4 réutilisent ces réseaux avec un bootstrap de l'ancre.
+Les sections Bayes et diffusion suivent la même structure : explication mathématique, deux cellules de code,
+puis commentaire. Leurs textes explicatifs ont une longueur voisine. Les équations et le code de Bayes sont conservés.
+La section diffusion garde les variantes D1–D4, le CRPS et le twCRPS, la couverture des intervalles et une courbe
+d'apprentissage. Les validations et les essais C0/DDPM sont résumés ; leurs résultats complets restent dans la
+version détaillée. D1/D2 sont réentraînés pour trois graines ; D3/D4 utilisent ces réseaux avec le bootstrap de l'ancre.
 La sélection enregistrée sur validation est D3 pour Tmax, D1 pour Tmin. Bayes obtient le meilleur CRPS global
 observé sur le test parmi les méthodes principales comparées. Le test a déjà été consulté : la comparaison est rétrospective.
 
-Les tableaux de référence sont extraits de `rendu_final/resultats/validation.csv` et `test.csv`, avec leurs empreintes
-dans le code du notebook. Les tableaux de la nouvelle exécution sont présentés séparément.
+Le tableau commun reprend les résultats de `rendu_final/resultats/validation.csv` et `test.csv`.
+Le tableau détaillé de la diffusion est recalculé à l'exécution. Les résultats archivés et recalculés sont distingués.
 Les tirages ne sont pas coupés pour les faire entrer dans un intervalle physique.
 
 | Fichier | Rôle |

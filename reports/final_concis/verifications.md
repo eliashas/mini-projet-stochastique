@@ -1,7 +1,7 @@
 # Vérification du rendu avec la section diffusion
 
 Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
-`2119712263f2ce40c047a99320cd8af2954639fe`. Le notebook à remettre est
+`2f6cc7147dbc6e2f16c7814b398e4eb35d6cddd0`. Le notebook à remettre est
 `rendu_final_concis/rendu_final_groupe.ipynb`.
 
 ## Exécution
@@ -9,22 +9,22 @@ Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
 Commande :
 
 ```powershell
-python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_concis_20261030
+python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_homogeneite_20261030
 ```
 
 - Noyau neuf, dossier sans données locales : les trois CSV sont téléchargés et vérifiés.
 - PyTorch 2.5.1+cu121 ; GPU NVIDIA GeForce GTX 1660 Ti.
-- 17 cellules de code exécutées sur 17 ; aucune sortie d'erreur.
-- Durée totale : 226,8 s, chargement des données et production des figures compris.
+- 16 cellules de code exécutées sur 16 ; aucune sortie d'erreur.
+- Durée totale : 220,2 s, chargement des données et production des figures compris.
 - 19 réseaux réellement entraînés : un pour la courbe diagnostique, douze pour D1/D2
   sur 1940–2000 (deux variables, deux objectifs, trois graines), six réajustés sur 1940–2025.
-- Les 11 figures sont extraites à côté de ce rapport. Les six figures de scores,
-  d'apprentissage, de projections et de distributions comparées ont été relues visuellement.
+- Les 10 figures sont extraites à côté de ce rapport. Les cinq figures d'apprentissage,
+  de projections et de distributions comparées ont été relues visuellement.
 
 Un appel Pandas à `Series.corr` avec un tableau NumPy a été corrigé après une première
 exécution interrompue dans la cellule Tmin. La vérification ci-dessus est une nouvelle
-exécution complète, après correction. Les derniers ajustements des commentaires ont
-conservé les sorties après comparaison exacte des 17 cellules de code.
+exécution complète, après correction. Cette version homogénéisée a été réexécutée intégralement. Le texte, le code et les résultats
+de Bayes ont ensuite été comparés à la base de travail et sont identiques.
 
 L'empreinte du notebook, celle de son code et les sorties texte sont dans `execution.json`.
 
@@ -41,7 +41,7 @@ Quatre tests réussis :
 2. ancre, normalisation et seuil calculés sur les seules données entraînées, et
    entraînement court sur CPU ;
 3. une seule ancre par trajectoire, et reproductibilité des tirages à graine fixée ;
-4. correspondance des tableaux inclus dans le notebook avec les CSV archivés.
+4. correspondance des tableaux de référence de l’utilitaire avec les CSV archivés.
 
 ## Résultats de cette réexécution
 
@@ -84,3 +84,13 @@ du dépôt. Ce notebook ne réexécute pas toute la matrice de validation. Il in
 de l'entraînement et réentraîne les variantes présentées avec les réglages déjà retenus.
 La version détaillée et ses expériences complètes restent accessibles dans
 `notebooks/rendu_final_equipe.ipynb`.
+
+
+## Version homogénéisée
+
+La diffusion a été ramenée de 1437 à 606 mots/éléments (équations comprises),
+contre 650 pour Bayes. Les deux sections suivent la même structure. Le tableau
+archivé détaillé et son graphique ont été retirés de cette version courte ; le tableau commun
+et le tableau recalculé sont conservés. Les contenus hors diffusion, les résultats de Bayes
+et les tableaux de projections sont identiques à la version précédente. Les dix figures
+restantes sont identiques. Les comparaisons sont consignées dans `homogeneite.json`.

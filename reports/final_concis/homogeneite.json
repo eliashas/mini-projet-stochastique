@@ -1,0 +1,15 @@
+{
+  "base_commit": "2f6cc7147dbc6e2f16c7814b398e4eb35d6cddd0",
+  "cellules_hors_diffusion_identiques": true,
+  "texte_et_code_bayes_identiques": true,
+  "resultats_bayes_identiques": true,
+  "tableaux_projections_identiques": true,
+  "mots_equations_comprises": {
+    "bayes": 650,
+    "diffusion_avant": 1437,
+    "diffusion_apres": 606
+  },
+  "structure_commune": "Explication mathématique, deux cellules de code, commentaire",
+  "figures_identiques_a_la_version_precedente": 10,
+  "sha256_notebook": "b701eb1cb88aea8929f723769a414874a063d256d4a124dc220843229850c501"
+}
