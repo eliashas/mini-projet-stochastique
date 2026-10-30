@@ -1,0 +1,72 @@
+{
+  "comparaisons": [
+    {
+      "device": "cpu",
+      "variable": "max",
+      "poids_extremes": 0.0,
+      "poids_et_tirages_identiques": true
+    },
+    {
+      "device": "cpu",
+      "variable": "max",
+      "poids_extremes": 0.5,
+      "poids_et_tirages_identiques": true
+    },
+    {
+      "device": "cpu",
+      "variable": "min",
+      "poids_extremes": 0.0,
+      "poids_et_tirages_identiques": true
+    },
+    {
+      "device": "cpu",
+      "variable": "min",
+      "poids_extremes": 0.5,
+      "poids_et_tirages_identiques": true
+    },
+    {
+      "device": "cuda",
+      "variable": "max",
+      "poids_extremes": 0.0,
+      "poids_et_tirages_identiques": true
+    },
+    {
+      "device": "cuda",
+      "variable": "max",
+      "poids_extremes": 0.5,
+      "poids_et_tirages_identiques": true
+    },
+    {
+      "device": "cuda",
+      "variable": "min",
+      "poids_extremes": 0.0,
+      "poids_et_tirages_identiques": true
+    },
+    {
+      "device": "cuda",
+      "variable": "min",
+      "poids_extremes": 0.5,
+      "poids_et_tirages_identiques": true
+    }
+  ],
+  "egalite_exacte_sans_tolerance": true,
+  "ecart_type_nul_protege": true,
+  "perte_nan_interceptee": true,
+  "tirages_nan_interceptes": true,
+  "lignes_avant": 125,
+  "lignes_apres": 108,
+  "base_commit": "3bbffb4c95ed2f897579f634b70b156779d178be",
+  "cellules_hors_modele_identiques": true,
+  "partie_bayes_identique": true,
+  "tableaux_scores_et_projections_identiques": true,
+  "figures_identiques": 10,
+  "donnees_integrees_preservees": true,
+  "reference_au_depot": false,
+  "verification_hors_ligne": {
+    "protection_active": true,
+    "tentatives_exterieures": 0
+  },
+  "cellules_executees": 16,
+  "secondes": 166.1711987000017,
+  "sha256_notebook": "50b91a97716943e9bdd3826512efce464f733f49f3205243d205f2f66d2e1352"
+}

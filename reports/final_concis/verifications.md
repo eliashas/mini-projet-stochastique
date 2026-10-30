@@ -1,7 +1,7 @@
 # Vérification du rendu avec la section diffusion
 
 Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
-`28eda097e98153e0f268a4d62303d3660624436b`. Le notebook à remettre est
+`3bbffb4c95ed2f897579f634b70b156779d178be`. Le notebook à remettre est
 `rendu_final_concis/rendu_final_groupe.ipynb`.
 
 ## Exécution
@@ -9,13 +9,13 @@ Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
 Commande :
 
 ```powershell
-python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_autonome_20261030 --sans-reseau
+python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_christian_20261030 --sans-reseau
 ```
 
 - Noyau neuf, dossier sans données locales : les trois CSV sont lus dans l’archive intégrée et vérifiés, sans téléchargement.
 - PyTorch 2.5.1+cu121 ; GPU NVIDIA GeForce GTX 1660 Ti.
 - 16 cellules de code exécutées sur 16 ; aucune sortie d'erreur.
-- Durée totale : 176,4 s, lecture des données et production des figures comprises.
+- Durée totale : 166,2 s, lecture des données et production des figures comprises.
 - 19 réseaux réellement entraînés : un pour la courbe diagnostique, douze pour D1/D2
   sur 1940–2000 (deux variables, deux objectifs, trois graines), six réajustés sur 1940–2025.
 - Les 10 figures sont extraites à côté de ce rapport. Les cinq figures d'apprentissage,
@@ -110,3 +110,24 @@ active et aucun appel externe n’a été tenté. Le fonctionnement du garde a �
 été vérifié séparément par interception d’un nom de domaine de test avant résolution.
 Les cellules hors initialisation, les résultats de Bayes, les tableaux de projections
 et les dix figures sont identiques à la version précédente. Preuves : `autonomie.json`.
+
+
+## Simplification proposée par Christian
+
+La cellule du débruiteur passe de 125 à 108 lignes. Les contrôles de l’échelle,
+de la perte, des gradients et des tirages non finis sont conservés, ainsi que
+l’affichage du GPU et le mode évaluation du réseau. Le chronométrage par réseau
+et les historiques inutilisés sans validation sont retirés.
+
+Huit comparaisons sur CPU et CUDA (Tmax/Tmin, poids des extrêmes 0/0,5)
+retrouvent exactement les mêmes poids appris, résidus générés et trajectoires
+avec ou sans bootstrap, sans tolérance numérique. Les courbes de validation
+sont également identiques dans les cas testés. Les pertes et tirages NaN
+sont interceptés et une échelle nulle est protégée. Les quatre tests ciblés
+sont réussis.
+
+La nouvelle exécution complète conserve les tableaux de scores, les projections
+et les dix figures à l’identique. La partie Bayes et toutes les cellules hors
+modèle sont inchangées. Les données restent intégrées, sans appel réseau externe.
+Preuve détaillée : `equivalence_christian.json`. Les preuves antérieures restent
+archivées avec l’empreinte du notebook auquel elles se rapportent.

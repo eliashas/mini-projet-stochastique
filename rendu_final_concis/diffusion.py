@@ -83,24 +83,22 @@ notre entraînement et notre configuration ; il ne démontre pas que les DDPM so
 '''
 
 CODE_MODELE = r'''
-import time
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.set_num_threads(1)
 print('Calcul sur :', torch.cuda.get_device_name(0) if device.type == 'cuda' else 'CPU')
 print('PyTorch :', torch.__version__)
 
 def ancre(x, t):
+    # droite des moindres carrés en ln(CO2), pente forcée à b >= 0
     b = max(float(np.polyfit(x, t, 1)[0]), 0.0)
     return np.array([np.mean(t - b * x), b])
 
 def bootstrap_ancre(x, t, seed=7100, B=500):
+    # 500 droites réajustées sur les résidus rééchantillonnés par blocs de 3 années
     ab = ancre(x, t)
     mu = ab[0] + ab[1] * x
-    r = t - mu
-    r = r - r.mean()
-    hasard = np.random.default_rng(seed)
-    n = len(t)
+    r = t - mu - np.mean(t - mu)
+    hasard, n = np.random.default_rng(seed), len(t)
     droites = []
     for _ in range(B):
         debuts = hasard.integers(0, n, size=int(np.ceil(n / 3)))
@@ -109,16 +107,17 @@ def bootstrap_ancre(x, t, seed=7100, B=500):
     return np.array(droites)
 
 class Debruiteur(torch.nn.Module):
+    # MLP 3 -> 32 -> 32 -> 1 : (résidu bruité u, niveau de bruit s, bruit zeta) -> résidu proposé
     def __init__(self):
         super().__init__()
-        self.reseau = torch.nn.Sequential(
-            torch.nn.Linear(3, 32), torch.nn.SiLU(),
-            torch.nn.Linear(32, 32), torch.nn.SiLU(), torch.nn.Linear(32, 1))
+        self.reseau = torch.nn.Sequential(torch.nn.Linear(3, 32), torch.nn.SiLU(),
+                                          torch.nn.Linear(32, 32), torch.nn.SiLU(), torch.nn.Linear(32, 1))
 
     def forward(self, u, s, zeta):
         return self.reseau(torch.stack([u, s, zeta], dim=-1)).squeeze(-1)
 
 def crps_entrainement(X, y, alpha=0.95):
+    # CRPS « almost fair » : 95 % fair (M(M-1)) + 5 % empirique (M²), propositions triées
     M = X.shape[1]
     X = X.sort(dim=1).values
     w = 2 * torch.arange(1, M + 1, device=X.device) - M - 1
@@ -128,41 +127,34 @@ def crps_entrainement(X, y, alpha=0.95):
 
 @torch.no_grad()
 def residus(g, n, seed):
-    # Le découpage en lots limite la mémoire, même pour 75 années et 10 000 trajectoires.
+    # n résidus générés depuis du bruit pur (s = 1), par lots de 4096
     hasard = torch.Generator(device=device).manual_seed(seed)
     morceaux = []
     for debut in range(0, n, 4096):
         k = min(4096, n - debut)
-        u = torch.randn(k, generator=hasard, device=device)
-        zeta = torch.randn(k, generator=hasard, device=device)
+        u, zeta = torch.randn(k, generator=hasard, device=device), torch.randn(k, generator=hasard, device=device)
         morceaux.append(g(u, torch.ones_like(u), zeta).cpu().numpy())
     return np.concatenate(morceaux).astype(np.float64)
 
 def entrainer_diffusion(x, t, pas, variable='max', penalite=0.0, seed=0, validation=None):
     ab = ancre(x, t)
     mu = ab[0] + ab[1] * x
-    e = max(float(np.std(t - mu, ddof=2)), 1e-6)
-    seuil = float(np.quantile(t, 0.8 if variable == 'max' else 0.2))
-    z = torch.tensor((t - mu) / e, dtype=torch.float32, device=device)
-    mu_t = torch.tensor(mu, dtype=torch.float32, device=device)
-    cible = torch.tensor(t, dtype=torch.float32, device=device)
-    torch.manual_seed(seed)
+    e = max(float(np.std(t - mu, ddof=2)), 1e-6)                     # échelle des résidus (°C)
+    seuil = float(np.quantile(t, 0.8 if variable == 'max' else 0.2))  # seuil du twCRPS
+    z, mu_t, cible = (torch.tensor(v, dtype=torch.float32, device=device) for v in ((t - mu) / e, mu, t))
+    torch.manual_seed(seed)                                        # initialisation reproductible
     g = Debruiteur().to(device)
     opt = torch.optim.AdamW(g.parameters(), lr=1e-3, weight_decay=1e-4)
     hasard = torch.Generator(device=device).manual_seed(seed + 100003)
     historique, pertes = [], []
-    debut = time.perf_counter()
     for etape in range(1, pas + 1):
-        ix = torch.randint(len(z), (64,), generator=hasard, device=device)
-        zb = z[ix]
-        s = torch.rand(64, generator=hasard, device=device)
-        bruit = torch.randn(64, generator=hasard, device=device)
-        u = (1 - s) * zb + s * bruit
-        zeta = torch.randn(64, 32, generator=hasard, device=device)
-        propositions = g(u[:, None].expand(-1, 32), s[:, None].expand(-1, 32), zeta)
-        X = mu_t[ix, None] + e * propositions   # coût en °C, comme dans les expériences originales
+        ix = torch.randint(len(z), (64,), generator=hasard, device=device)       # lot de 64 années
+        s = torch.rand(64, generator=hasard, device=device)                      # niveaux de bruit
+        u = (1 - s) * z[ix] + s * torch.randn(64, generator=hasard, device=device)
+        zeta = torch.randn(64, 32, generator=hasard, device=device)              # 32 propositions par année
+        X = mu_t[ix, None] + e * g(u[:, None].expand(-1, 32), s[:, None].expand(-1, 32), zeta)  # en °C
         perte = crps_entrainement(X, cible[ix])
-        if penalite:
+        if penalite:                                                  # pondération des extrêmes
             v = torch.clamp_min if variable == 'max' else torch.clamp_max
             perte = perte + penalite * crps_entrainement(v(X, seuil), v(cible[ix], seuil))
         if not torch.isfinite(perte):
@@ -171,40 +163,31 @@ def entrainer_diffusion(x, t, pas, variable='max', penalite=0.0, seed=0, validat
         perte.backward()
         torch.nn.utils.clip_grad_norm_(g.parameters(), 1.0, error_if_nonfinite=True)
         opt.step()
-        pertes.append(float(perte.detach().cpu()))
-        if etape % 250 == 0 or etape == pas:
-            ligne = {'pas': etape, 'coût entraînement (°C)': np.mean(pertes)}
-            if validation is not None:
-                xv, tv = validation
-                Z = residus(g, 4096, seed + 900001)
-                tirages = ab[0] + ab[1] * xv + e * Z[:, None]
-                ligne['CRPS validation (°C)'] = crps(tirages, tv)
-            historique.append(ligne)
-            pertes = []
-    if device.type == 'cuda':
-        torch.cuda.synchronize()
-    return {'reseau': g.eval(), 'ancre': ab, 'e': e, 'seuil': seuil,
-            'historique': pd.DataFrame(historique), 'secondes': time.perf_counter() - debut}
+        if validation is not None:                                    # courbe d'apprentissage
+            pertes.append(perte.item())
+            if etape % 250 == 0 or etape == pas:
+                tirages = ab[0] + ab[1] * validation[0] + e * residus(g, 4096, seed + 900001)[:, None]
+                historique.append({'pas': etape, 'coût entraînement (°C)': np.mean(pertes),
+                                   'CRPS validation (°C)': crps(tirages, validation[1])})
+                pertes = []
+    return {'reseau': g.eval(), 'ancre': ab, 'e': e, 'seuil': seuil, 'historique': pd.DataFrame(historique)}
 
 def entrainer_suite(x, t, pas, variable='max', penalite=0.0):
-    membres = [entrainer_diffusion(x, t, pas, variable, penalite, seed) for seed in (0, 1, 2)]
-    print(f'T{variable}, poids extrêmes {penalite:g} : 3 réseaux, '
-          f'{sum(m["secondes"] for m in membres):.1f} s', flush=True)
-    return {'membres': membres, 'droites': bootstrap_ancre(x, t)}
+    # 3 réseaux (graines 0, 1, 2) et 500 droites bootstrap
+    return {'membres': [entrainer_diffusion(x, t, pas, variable, penalite, seed) for seed in (0, 1, 2)],
+            'droites': bootstrap_ancre(x, t)}
 
 def tirer_diffusion(suite, x_futur, n=N, bootstrap=True, seed=8200):
-    # Un réseau et une droite par trajectoire ; une innovation indépendante par année.
+    # une droite et un réseau par trajectoire ; un nouveau résidu chaque année
     ny = len(x_futur)
     effectifs = [n // 3 + (k < n % 3) for k in range(3)]
-    fluctuations = np.concatenate([
-        m['e'] * residus(m['reseau'], k * ny, seed + j).reshape(k, ny)
-        for j, (m, k) in enumerate(zip(suite['membres'], effectifs))])
+    fluctuations = np.concatenate([m['e'] * residus(m['reseau'], k * ny, seed + j).reshape(k, ny)
+                                   for j, (m, k) in enumerate(zip(suite['membres'], effectifs))])
     if bootstrap:
-        ix = np.random.default_rng(seed + 7100).integers(len(suite['droites']), size=n)
-        a, b = suite['droites'][ix].T
+        a, b = suite['droites'][np.random.default_rng(seed + 7100).integers(len(suite['droites']), size=n)].T
     else:
         a, b = suite['membres'][0]['ancre']
-    tirages = np.asarray(a).reshape(-1, 1) + np.asarray(b).reshape(-1, 1) * x_futur + fluctuations
+    tirages = np.reshape(a, (-1, 1)) + np.reshape(b, (-1, 1)) * x_futur + fluctuations
     if not np.isfinite(tirages).all():
         raise FloatingPointError('Température simulée non finie')
     return tirages
