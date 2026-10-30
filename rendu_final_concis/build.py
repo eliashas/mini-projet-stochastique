@@ -3,7 +3,11 @@ sont remplacées par notre code et nos commentaires (fichier commentaires.py).
 
     python build.py      # écrit rendu_final_groupe.ipynb (non exécuté)
 """
+import base64
+import hashlib
+import io
 import json
+import zipfile
 from pathlib import Path
 
 ICI = Path(__file__).parent
@@ -16,7 +20,25 @@ md = lambda s: {'cell_type': 'markdown', 'metadata': {}, 'source': s.strip()}
 code = lambda s: {'cell_type': 'code', 'metadata': {}, 'execution_count': None, 'outputs': [], 'source': s.strip()}
 com = lambda k: md(C.get(k, f'_(commentaire à écrire : {k})_'))
 
+EMPREINTES_CSV = {
+    'daily_temp_brest.csv': '0eb44f9adcf0e876d3ad017f4efbd540f24d40c1aaf2562c4f9648447ab16613',
+    'yearly_temp_brest.csv': 'dc99cbcf4d7e485ab55f5a99cdd13e10ef7afb79230c4389240f759c84f8eb1f',
+    'yearly_future_co2.csv': 'c39c3402b505eddbca00a00f50ae64c258c3b6e872ae8313db896d7233e8a0b5',
+}
+tampon_donnees = io.BytesIO()
+with zipfile.ZipFile(tampon_donnees, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    for nom, empreinte in EMPREINTES_CSV.items():
+        contenu = (ICI / nom).read_bytes().replace(b'\r\n', b'\n')
+        if hashlib.sha256(contenu).hexdigest() != empreinte:
+            raise ValueError('Données du sujet modifiées : ' + nom)
+        entree = zipfile.ZipInfo(nom, date_time=(2026, 1, 1, 0, 0, 0))
+        archive.writestr(entree, contenu, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+donnees_compressees = tampon_donnees.getvalue()
+donnees_b64 = base64.b64encode(donnees_compressees).decode('ascii')
+chaines_b64 = '\n'.join('    ' + repr(donnees_b64[i:i + 120]) for i in range(0, len(donnees_b64), 120))
+
 IMPORTS = r'''
+#@title Initialisation et données
 %matplotlib inline
 import numpy as np
 import pandas as pd
@@ -24,25 +46,30 @@ import matplotlib.pyplot as plt
 import torch
 
 import io
+import base64
 import hashlib
-from pathlib import Path
-from urllib.request import urlopen
+import zipfile
 from IPython.display import display
 
-# Les CSV du sujet sont lus localement ou téléchargés depuis cette version du dépôt.
-BASE_DONNEES = 'https://raw.githubusercontent.com/eliashas/mini-projet-stochastique/2119712263f2ce40c047a99320cd8af2954639fe/rendu_final_concis/'
-EMPREINTES_DONNEES = {'daily_temp_brest.csv': '0eb44f9adcf0e876d3ad017f4efbd540f24d40c1aaf2562c4f9648447ab16613', 'yearly_temp_brest.csv': 'dc99cbcf4d7e485ab55f5a99cdd13e10ef7afb79230c4389240f759c84f8eb1f', 'yearly_future_co2.csv': 'c39c3402b505eddbca00a00f50ae64c258c3b6e872ae8313db896d7233e8a0b5'}
+# Les trois CSV fournis avec le sujet sont contenus dans cette archive compressée.
+DONNEES_B64 = (
+__ARCHIVE_DONNEES__
+)
+EMPREINTES_DONNEES = __EMPREINTES_DONNEES__
+archive_donnees = zipfile.ZipFile(io.BytesIO(base64.b64decode(DONNEES_B64, validate=True)))
+if set(archive_donnees.namelist()) != set(EMPREINTES_DONNEES):
+    raise ValueError('Archive de données incomplète')
 
 def lire_donnees(nom):
-    p = Path(nom)
-    contenu = p.read_bytes() if p.exists() else urlopen(BASE_DONNEES + nom, timeout=60).read()
-    if hashlib.sha256(contenu.replace(b'\r\n', b'\n')).hexdigest() != EMPREINTES_DONNEES[nom]:
+    contenu = archive_donnees.read(nom)
+    if hashlib.sha256(contenu).hexdigest() != EMPREINTES_DONNEES[nom]:
         raise ValueError('Le fichier ne correspond pas aux données du sujet : ' + nom)
     return pd.read_csv(io.BytesIO(contenu))
 
 rng = np.random.default_rng(0)   # graine fixée pour retrouver les mêmes résultats
 plt.rcParams.update({'figure.figsize': (11, 4), 'axes.grid': True, 'grid.alpha': .3})
 '''
+IMPORTS = IMPORTS.replace('__ARCHIVE_DONNEES__', chaines_b64).replace('__EMPREINTES_DONNEES__', repr(EMPREINTES_CSV))
 
 # ------------------------------------------------------------------ partie 1
 SAISON = r'''
@@ -327,7 +354,9 @@ for c in prof['cells']:
     if src.strip() == '### TO DO ###':
         cells += next(todo)
     elif '%pylab' in src:
-        cells.append(code(IMPORTS))
+        initialisation = code(IMPORTS)
+        initialisation['metadata'] = {'cellView': 'form', 'jupyter': {'source_hidden': True}}
+        cells.append(initialisation)
     elif src.startswith('The five students are'):
         cells.append(md(C['membres']))
     elif c['cell_type'] == 'code':
@@ -337,6 +366,8 @@ for c in prof['cells']:
         cells.append(c)
 nb = {**prof, 'nbformat': 4, 'nbformat_minor': 5, 'cells': cells,
       'metadata': {'kernelspec': {'name': 'python3', 'display_name': 'Python 3', 'language': 'python'},
+                   'donnees_integrees': {'fichiers': list(EMPREINTES_CSV),
+                                        'sha256_archive': hashlib.sha256(donnees_compressees).hexdigest()},
                    'language_info': {'name': 'python'}}}
 for i, cellule in enumerate(cells):
     cellule['id'] = f'cellule-{i:03d}'

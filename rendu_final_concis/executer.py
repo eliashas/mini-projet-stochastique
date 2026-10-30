@@ -9,6 +9,7 @@ import base64
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 import time
@@ -19,11 +20,62 @@ if sys.platform == 'win32':
 import nbformat
 from nbclient import NotebookClient
 
+GARDE_RESEAU = r'''
+import ipaddress
+import json
+import os
+from pathlib import Path
+import socket
+
+preuve = Path(os.environ['SMA_PREUVE_RESEAU'])
+journal = Path(os.environ['SMA_JOURNAL_RESEAU'])
+
+def local(hote):
+    if hote in (None, '', 'localhost', b'localhost'):
+        return True
+    try:
+        ip = ipaddress.ip_address(hote.decode() if isinstance(hote, bytes) else str(hote))
+        return ip.is_loopback or ip.is_unspecified
+    except ValueError:
+        return False
+
+def verifier(hote):
+    if not local(hote):
+        with journal.open('a', encoding='utf-8') as f:
+            f.write(json.dumps({'hote': str(hote)}) + '\n')
+        raise RuntimeError('Accès réseau externe bloqué pendant la vérification du notebook')
+
+getaddrinfo_original = socket.getaddrinfo
+connect_original = socket.socket.connect
+connect_ex_original = socket.socket.connect_ex
+
+def getaddrinfo(hote, *args, **kwargs):
+    verifier(hote)
+    return getaddrinfo_original(hote, *args, **kwargs)
+
+def connect(self, adresse):
+    if isinstance(adresse, tuple):
+        verifier(adresse[0])
+    return connect_original(self, adresse)
+
+def connect_ex(self, adresse):
+    if isinstance(adresse, tuple):
+        verifier(adresse[0])
+    return connect_ex_original(self, adresse)
+
+socket.getaddrinfo = getaddrinfo
+socket.socket.connect = connect
+socket.socket.connect_ex = connect_ex
+preuve.write_text(json.dumps({'protection_active': True}), encoding='utf-8')
+'''
+
 
 def main():
     ici = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dossier', type=Path, default=ici)
+    parser.add_argument('--sans-reseau', action='store_true',
+                        help='Bloque les connexions externes du noyau pendant la vérification.')
     args = parser.parse_args()
     dossier = args.dossier.resolve()
     dossier.mkdir(parents=True, exist_ok=True)
@@ -33,6 +85,20 @@ def main():
     nb = nbformat.read(chemin, as_version=4)
     nbformat.validate(nb)
     debut = time.perf_counter()
+    options_noyau = {}
+    if args.sans_reseau:
+        garde = dossier / '.verification_reseau'
+        garde.mkdir(exist_ok=True)
+        (garde / 'sitecustomize.py').write_text(GARDE_RESEAU, encoding='utf-8')
+        preuve_reseau, journal_reseau = garde / 'active.json', garde / 'tentatives.jsonl'
+        if preuve_reseau.exists():
+            preuve_reseau.unlink()
+        journal_reseau.write_text('', encoding='utf-8')
+        env = os.environ.copy()
+        env['PYTHONPATH'] = str(garde) + os.pathsep + env.get('PYTHONPATH', '')
+        env['SMA_PREUVE_RESEAU'] = str(preuve_reseau)
+        env['SMA_JOURNAL_RESEAU'] = str(journal_reseau)
+        options_noyau['env'] = env
 
     def progression(cell, cell_index, **_):
         if cell.cell_type == 'code':
@@ -43,7 +109,7 @@ def main():
                             resources={'metadata': {'path': str(dossier)}},
                             on_cell_executed=progression)
     try:
-        client.execute()
+        client.execute(**options_noyau)
     finally:
         nbformat.write(nb, chemin)
 
@@ -66,7 +132,18 @@ def main():
                'cellules_code': sum(c.cell_type == 'code' for c in nb.cells),
                'cellules_executees': sum(c.get('execution_count') is not None for c in nb.cells),
                'erreurs': erreurs, 'figures': figures,
+               'code_cellules_sha256': hashlib.sha256('\n\n'.join(
+                   c.source.replace('\r\n', '\n') for c in nb.cells if c.cell_type == 'code'
+               ).encode('utf-8')).hexdigest(),
                'sorties_texte': textes}
+    if args.sans_reseau:
+        if not preuve_reseau.exists():
+            raise RuntimeError('La protection réseau du noyau ne s’est pas chargée')
+        tentatives = len(journal_reseau.read_text(encoding='utf-8').splitlines())
+        rapport['verification_hors_ligne'] = {'protection_active': True,
+                                              'tentatives_exterieures': tentatives}
+        if tentatives:
+            raise RuntimeError('Des appels réseau externes ont été tentés pendant l’exécution')
     (rapports / 'execution.json').write_text(json.dumps(rapport, indent=2, ensure_ascii=False), encoding='utf-8')
     print(f'Terminé en {rapport["secondes"]:.1f} s ; {len(erreurs)} erreur(s).', flush=True)
     if erreurs:

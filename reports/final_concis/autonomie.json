@@ -1,0 +1,21 @@
+{
+  "base_commit": "28eda097e98153e0f268a4d62303d3660624436b",
+  "fichiers_csv_integres_sha256": {
+    "daily_temp_brest.csv": "0eb44f9adcf0e876d3ad017f4efbd540f24d40c1aaf2562c4f9648447ab16613",
+    "yearly_temp_brest.csv": "dc99cbcf4d7e485ab55f5a99cdd13e10ef7afb79230c4389240f759c84f8eb1f",
+    "yearly_future_co2.csv": "c39c3402b505eddbca00a00f50ae64c258c3b6e872ae8313db896d7233e8a0b5"
+  },
+  "sha256_archive": "f25605f1bb0ce909bf89455c309269533f6bcb1f59fd8ed3f5343dd71f92ca72",
+  "initialisation_repliee": true,
+  "reference_github_dans_le_notebook": false,
+  "cellules_hors_initialisation_identiques": true,
+  "texte_code_et_resultats_bayes_identiques": true,
+  "figures_identiques": 10,
+  "tableaux_de_projections_identiques": true,
+  "reseau_externe_bloque": true,
+  "tentatives_exterieures": 0,
+  "cellules_executees": 16,
+  "secondes": 176.43701780002448,
+  "taille_notebook_octets": 1216573,
+  "sha256_notebook": "2700953a0d1cf94d6fdc2965bf457baa6df8fb1db8cfe21a021b561dfa4869d5"
+}

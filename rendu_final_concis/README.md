@@ -2,17 +2,28 @@
 
 Le fichier à rendre est **`rendu_final_groupe.ipynb`**, déjà exécuté.
 
-- **[Ouvrir dans Colab](https://colab.research.google.com/github/eliashas/mini-projet-stochastique/blob/final/rendu_final_concis/rendu_final_groupe.ipynb)**.
+- **Ouvrir dans Colab** : importer le fichier `rendu_final_groupe.ipynb` depuis l'ordinateur.
 - **Relancer** : choisir un GPU dans *Exécution > Modifier le type d'exécution*, puis *Tout exécuter*.
   Le notebook entraîne réellement les réseaux ; prévoir quelques minutes. Il fonctionne aussi sur CPU.
-  Les trois CSV sont lus localement ou téléchargés automatiquement depuis une version fixe du dépôt.
+  Les trois CSV sont intégrés dans une archive compressée à l'intérieur du notebook.
+  Aucun téléchargement de données et aucun autre fichier ne sont nécessaires.
 - **Travailler à plusieurs** : enregistrer une seule copie dans Drive et la partager avec les membres comme éditeurs.
-  Les modifications dans Drive ne sont pas automatiquement reportées sur GitHub.
+  Garder une seule copie commune pour la relecture et le rendu.
 
 Pour modifier le notebook : changer le code dans `build.py` ou les commentaires dans `commentaires.py`, puis
 `python rendu_final_concis/build.py` depuis la racine du dépôt, puis
 `python rendu_final_concis/executer.py`. Le constructeur remplace le notebook : intégrer les modifications des
 cellules dans les sources avant de le relancer. Les chiffres cités dans les commentaires doivent correspondre aux sorties.
+
+Pour vérifier son autonomie dans un dossier vide :
+
+```powershell
+python rendu_final_concis/executer.py --dossier tmp/verification_autonome --sans-reseau
+```
+
+La cellule d'initialisation contient les données et s'affiche repliée. Elle les décompresse en mémoire et vérifie
+leurs empreintes avant lecture. Les bibliothèques Python, dont PyTorch, doivent être installées ; elles sont
+habituellement présentes dans Colab. L'exécution ne fait aucun appel réseau pour récupérer des données ou du code.
 
 Les sections Bayes et diffusion suivent la même structure : explication mathématique, deux cellules de code,
 puis commentaire. Leurs textes explicatifs ont une longueur voisine. Les équations et le code de Bayes sont conservés.

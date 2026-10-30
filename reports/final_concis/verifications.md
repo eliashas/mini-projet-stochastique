@@ -1,7 +1,7 @@
 # Vérification du rendu avec la section diffusion
 
 Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
-`2f6cc7147dbc6e2f16c7814b398e4eb35d6cddd0`. Le notebook à remettre est
+`28eda097e98153e0f268a4d62303d3660624436b`. Le notebook à remettre est
 `rendu_final_concis/rendu_final_groupe.ipynb`.
 
 ## Exécution
@@ -9,13 +9,13 @@ Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
 Commande :
 
 ```powershell
-python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_homogeneite_20261030
+python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_autonome_20261030 --sans-reseau
 ```
 
-- Noyau neuf, dossier sans données locales : les trois CSV sont téléchargés et vérifiés.
+- Noyau neuf, dossier sans données locales : les trois CSV sont lus dans l’archive intégrée et vérifiés, sans téléchargement.
 - PyTorch 2.5.1+cu121 ; GPU NVIDIA GeForce GTX 1660 Ti.
 - 16 cellules de code exécutées sur 16 ; aucune sortie d'erreur.
-- Durée totale : 220,2 s, chargement des données et production des figures compris.
+- Durée totale : 176,4 s, lecture des données et production des figures comprises.
 - 19 réseaux réellement entraînés : un pour la courbe diagnostique, douze pour D1/D2
   sur 1940–2000 (deux variables, deux objectifs, trois graines), six réajustés sur 1940–2025.
 - Les 10 figures sont extraites à côté de ce rapport. Les cinq figures d'apprentissage,
@@ -93,4 +93,20 @@ contre 650 pour Bayes. Les deux sections suivent la même structure. Le tableau
 archivé détaillé et son graphique ont été retirés de cette version courte ; le tableau commun
 et le tableau recalculé sont conservés. Les contenus hors diffusion, les résultats de Bayes
 et les tableaux de projections sont identiques à la version précédente. Les dix figures
-restantes sont identiques. Les comparaisons sont consignées dans `homogeneite.json`.
+restantes sont identiques. Les comparaisons de cette révision sont consignées dans `homogeneite.json` (version antérieure à l’intégration des données).
+
+
+## Données intégrées et autonomie
+
+Les trois CSV fournis avec le sujet sont empaquetés dans une archive ZIP compressée
+intégrée à la cellule d’initialisation repliée. Ils sont décompressés en mémoire et
+leurs empreintes sont vérifiées avant lecture. Il n’y a plus de chemin vers le dépôt,
+de chargement local conditionnel ou de téléchargement de données. Les bibliothèques
+Python restent nécessaires. Les références scientifiques sont conservées.
+
+Le noyau a été exécuté dans un dossier sans CSV, avec résolution DNS et connexions
+Python externes bloquées (boucle locale autorisée pour Jupyter). La protection était
+active et aucun appel externe n’a été tenté. Le fonctionnement du garde a également
+été vérifié séparément par interception d’un nom de domaine de test avant résolution.
+Les cellules hors initialisation, les résultats de Bayes, les tableaux de projections
+et les dix figures sont identiques à la version précédente. Preuves : `autonomie.json`.
