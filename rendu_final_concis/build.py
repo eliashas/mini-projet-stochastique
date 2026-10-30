@@ -10,6 +10,7 @@ ICI = Path(__file__).parent
 PROF = ICI / 'sujet_prof.ipynb'   # notebook fourni par le prof
 SORTIE = ICI / 'rendu_final_groupe.ipynb'
 from commentaires import C
+import diffusion as diffusion_etude
 
 md = lambda s: {'cell_type': 'markdown', 'metadata': {}, 'source': s.strip()}
 code = lambda s: {'cell_type': 'code', 'metadata': {}, 'execution_count': None, 'outputs': [], 'source': s.strip()}
@@ -21,6 +22,23 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch
+
+import io
+import hashlib
+from pathlib import Path
+from urllib.request import urlopen
+from IPython.display import display
+
+# Les CSV du sujet sont lus localement ou téléchargés depuis cette version du dépôt.
+BASE_DONNEES = 'https://raw.githubusercontent.com/eliashas/mini-projet-stochastique/2119712263f2ce40c047a99320cd8af2954639fe/rendu_final_concis/'
+EMPREINTES_DONNEES = {'daily_temp_brest.csv': '0eb44f9adcf0e876d3ad017f4efbd540f24d40c1aaf2562c4f9648447ab16613', 'yearly_temp_brest.csv': 'dc99cbcf4d7e485ab55f5a99cdd13e10ef7afb79230c4389240f759c84f8eb1f', 'yearly_future_co2.csv': 'c39c3402b505eddbca00a00f50ae64c258c3b6e872ae8313db896d7233e8a0b5'}
+
+def lire_donnees(nom):
+    p = Path(nom)
+    contenu = p.read_bytes() if p.exists() else urlopen(BASE_DONNEES + nom, timeout=60).read()
+    if hashlib.sha256(contenu.replace(b'\r\n', b'\n')).hexdigest() != EMPREINTES_DONNEES[nom]:
+        raise ValueError('Le fichier ne correspond pas aux données du sujet : ' + nom)
+    return pd.read_csv(io.BytesIO(contenu))
 
 rng = np.random.default_rng(0)   # graine fixée pour retrouver les mêmes résultats
 plt.rcParams.update({'figure.figsize': (11, 4), 'axes.grid': True, 'grid.alpha': .3})
@@ -137,105 +155,54 @@ print(tableau.round(2))
 METHODE = r'''
 ## Notre démarche
 
-Pour cette partie, nous avons organisé une petite compétition au sein du groupe : chaque membre a proposé et codé sa
-propre méthode de prédiction probabiliste, puis toutes les méthodes ont été évaluées selon le même protocole. Seule la
-meilleure selon ce protocole est présentée en détail dans la suite ; les autres sont résumées ci-dessous avec leur
-score.
+Nous étudions une diffusion distributionnelle pour générer les fluctuations annuelles, avec une régression
+bayésienne comme comparaison. Les autres propositions du groupe permettent de situer leurs résultats.
 
-Le protocole est le suivant :
+### Contributions et protocole
 
-- entraînement sur les années **1940-2000** uniquement ;
-- prédiction de chaque année **2001-2025** à partir de son CO2 (10 000 tirages par année) ;
-- comparaison avec les températures observées à l'aide du **score CRPS** (défini plus bas).
+- **Christian** : régression bayésienne en logarithme du CO₂ ; l'incertitude porte sur la droite et le bruit annuel.
+- **Elias** : DDPM, débruiteur stochastique au CRPS, pondération des extrêmes et bootstrap de l'ancre.
+- **Reda** : loi GEV, adaptée aux maxima ; pour les minima, on applique la méthode aux températures opposées.
+- **Yazid** : régression quantile, avec 99 quantiles et correction de leur ordre.
+- **Diae** : réseau donnant les poids, moyennes et écarts-types d'un mélange de trois gaussiennes.
 
-Les années 2001-2025 ont des concentrations de CO2 plus élevées que toutes celles de l'entraînement. Ce test reproduit
-donc, à petite échelle, la difficulté de 2100 : prédire pour un CO2 jamais observé.
+Le protocole commun utilise des validations chronologiques à l'intérieur de 1940–2000, puis un réajustement
+sur 1940–2000 pour comparer les prédictions aux 25 années 2001–2025. L'ancre, la normalisation et les seuils
+sont ajustés sur l'entraînement. La section diffusion détaille les trois découpages et les variantes.
+Les résultats archivés du protocole commun sont les suivants :
 
-### Les méthodes proposées
+| Méthode | CRPS validation Tmax | CRPS test Tmax | CRPS validation Tmin | CRPS test Tmin |
+|:--|--:|--:|--:|--:|
+| Référence : ancre log + gaussienne | 1,176 | 1,708 | 1,219 | 1,064 |
+| Régression bayésienne | 1,169 | **1,580** | 1,217 | **0,980** |
+| Diffusion D1, ancre fixe | 1,123 | 1,701 | **1,168** | 1,036 |
+| Diffusion D3, ancre bootstrap | **1,114** | 1,650 | 1,174 | 0,989 |
+| GEV (maxima / minima opposés) | 1,165 | 1,680 | 1,241 | 1,100 |
+| Régression quantile régularisée | 1,137 | 1,799 | 1,196 | 1,030 |
 
-- **Référence** (point de comparaison) : une droite en fonction de $\ln(\mathrm{CO_2})$, plus un bruit gaussien.
-- **Régression bayésienne** (Christian) : la même droite, mais au lieu d'une seule pente, on tire des milliers de
-  pentes possibles. La prédiction devient donc plus incertaine quand on s'éloigne des données.
-- **Loi des valeurs extrêmes, GEV** (Reda) : la loi que donne la théorie pour le maximum d'un grand nombre de valeurs
-  (ici, le maximum de toutes les températures de l'année). Le centre de la loi dépend du CO2. Pour Tmin, on applique la même
-  méthode à $-T_{\min}$, car le minimum est le maximum des valeurs opposées.
-- **Modèles de diffusion** (Elias) : le type de réseau suggéré par le sujet. Une droite en $\ln(\mathrm{CO_2})$ sert
-  d'« ancre », et un réseau de neurones génère les écarts à cette droite par diffusion : il part d'un bruit pur et le
-  « débruite » pour obtenir un tirage. Elias a testé plusieurs versions : un DDPM classique (abandonné, car il
-  produisait des valeurs absurdes pour Tmin, jusqu'à −1 933 °C), une diffusion entraînée au CRPS, et la même avec une
-  ancre incertaine (la droite elle-même est tirée au hasard).
-- **Régression quantile** (Yazid) : au lieu de supposer une loi, on ajuste 99 droites, une par quantile (1 %, 2 %, …,
-  99 %).
-- **Réseau à mélange de gaussiennes** (Diae) : un réseau de neurones qui donne, pour chaque valeur du CO2, un mélange
-  de 3 lois normales (leurs poids, moyennes et écarts-types).
+Les scores sont en °C ; plus ils sont faibles, mieux c'est. Les réseaux de Diae ont été étudiés dans sa
+contribution (CRPS test annoncé : 1,85 / 1,18 °C), mais n'ont pas été réévalués sur ces trois validations.
+Ils ne participent donc pas au choix sur validation de ce tableau.
 
-### Le score : le CRPS
+**D3 pour Tmax et D1 pour Tmin sont retenus sur validation.** Bayes a le meilleur CRPS observé sur le test
+parmi ces méthodes, sans que cela justifie de refaire le choix après lecture du test. Le test avait déjà été
+consulté dans le groupe : sa comparaison est rétrospective. Les petites différences ne suffisent pas à prouver
+qu'un modèle sera meilleur sur de nouvelles années.
 
-Nos méthodes ne donnent pas une valeur mais une loi, donc l'erreur habituelle $|\text{prédiction} - \text{observation}|$
-ne suffit pas. Le CRPS compare toute la loi prédite $F$ à la valeur observée $y$ :
-$$\mathrm{CRPS}(F,y)=\mathbb E|X-y|-\tfrac12\,\mathbb E|X-X'|$$
-où $X$ et $X'$ sont deux tirages faits au hasard dans notre loi prédite, l'un indépendamment de l'autre.
+### Pourquoi le CRPS ?
 
-- Le premier terme est la distance moyenne entre nos tirages et la réalité : il est petit si la loi est bien centrée.
-- Le second terme mesure la largeur de notre loi. Sans lui, le meilleur choix serait de toujours prédire une seule
-  valeur ; avec lui, une loi qui a la bonne largeur est récompensée.
+Une prévision probabiliste donne une distribution $F$, et non une valeur unique. Le CRPS la compare à
+l'observation $y$ :
 
-On calcule le CRPS pour chacune des 25 années de 2001-2025, puis on fait la moyenne : c'est ce score moyen qui
-figure dans le tableau. Il est en °C et plus il est petit, mieux c'est. Pour une prédiction à une seule valeur, il
-redonne l'erreur absolue.
+$$\mathrm{CRPS}(F,y)=\mathbb E|X-y|-\frac12\mathbb E|X-X'|,$$
 
-### Résultats sur 2001-2025
+où $X$ et $X'$ sont deux tirages indépendants de $F$. Le premier terme pénalise l'éloignement à l'observation ;
+le second tient compte de la dispersion. L'ensemble du score encourage une distribution correctement placée
+et dispersée. On calcule ce score pour chaque année, puis on prend la moyenne. Il est en °C.
+Une prévision déterministe redonne l'erreur absolue. Les 10 000 tirages décrivent la loi prédite ; ils ne
+remplacent pas les 25 années de test. On complète le CRPS par un score de queue et la couverture des intervalles.
 
-| Méthode | Proposée par | CRPS Tmax (°C) | CRPS Tmin (°C) |
-|:--|:--|:-:|:-:|
-| **Régression bayésienne** | Christian | **1,57** | **0,98** |
-| Diffusion avec ancre incertaine | Elias | 1,65 | 0,99 |
-| Loi des valeurs extrêmes (GEV) | Reda | 1,68 | 0,99 |
-| Référence | — | 1,70 | 1,14 |
-| Diffusion entraînée au CRPS | Elias | 1,70 | 1,03 |
-| Régression quantile | Yazid | 1,81 | 1,07 |
-| Réseau à mélange de gaussiennes | Diae | 1,85 | 1,18 |
-
-Les réseaux de neurones et la GEV ont été codés en PyTorch, et les modèles d'Elias entraînés sur GPU. Les scores
-varient d'environ ±0,03 °C d'une exécution à l'autre.
-
-La régression bayésienne a le meilleur CRPS pour Tmax. Pour Tmin, elle est à égalité avec la GEV et la diffusion
-(0,98 à 0,99). Les réseaux de neurones ne font pas mieux, pour une raison simple : ils ont beaucoup de paramètres à
-régler (environ 1 200 pour la diffusion) et seulement 61 années pour apprendre. Avec si peu de données, ils ne peuvent
-pas apprendre mieux qu'une loi simple. D'ailleurs, la meilleure diffusion est celle où la droite est incertaine :
-c'est la même idée que la régression bayésienne.
-
-Attention, « meilleur » veut dire ici meilleur CRPS sur 2001-2025, pas meilleur modèle dans l'absolu : 25 années de
-test, c'est peu, et le CRPS dit peu de chose sur les valeurs extrêmes. C'est le critère qui nous paraît le plus
-raisonnable, mais d'autres choix restaient défendables (par exemple la GEV, faite pour les extrêmes).
-
-**Ce que donnent les méthodes en 2100.** On a aussi regardé ce que chaque méthode prédit pour Tmax en 2100 avec
-SSP5-8.5 (946 ppm), une fois réentraînée sur 1940-2025 :
-
-| Méthode | Médiane (°C) | Intervalle 5-95 % (°C) | P(Tmax 2100 > 40 °C) | Problème |
-|:--|:-:|:-:|:-:|:--|
-| **Régression bayésienne** | 32,8 | 27,4 – 38,2 | 1,5 % | — |
-| Diffusion avec ancre incertaine (Elias) | 32,5 | 26,7 – 39,0 | 3,0 % | — |
-| Diffusion entraînée au CRPS (Elias) | 32,6 | 28,7 – 37,3 | 0,6 % | — |
-| GEV (Reda) | 31,4 | 26,2 – 37,1 | 0,8 % | — |
-| Référence | 32,8 | 29,2 – 36,4 | 0,01 % | trop sûre d'elle |
-| Régression quantile (Yazid) | 31,7 | 26,6 – 44,0 | 6,8 % | diverge |
-| Réseau à mélange (Diae) | 29,1 | 23,8 – 34,7 | 0,06 % | ne suit plus le CO2 |
-
-La diffusion et la GEV donnent des résultats proches des nôtres. Trois méthodes posent problème :
-
-- la régression quantile diverge : ses 99 droites s'écartent quand on s'éloigne des données ;
-- le réseau de Diae n'a jamais vu un CO2 aussi élevé, et sa prédiction reste bloquée vers 29 °C dès 2050 ;
-- la référence est trop sûre d'elle : avec une seule droite, elle donne 0,01 % au lieu de 1,5 %.
-
-Notre choix est donc cohérent avec ce que les méthodes prédisent pour 2100, et pas seulement avec le CRPS.
-
-**Dans la suite**, on développe les deux premières méthodes du tableau des scores : la régression bayésienne, qu'on
-retient pour les projections, et la diffusion, le type de modèle suggéré par le sujet. La méthode retenue est
-**réentraînée sur toutes les années 1940-2025** pour prédire jusqu'en 2100 : le test sur 2001-2025 servait seulement à
-choisir, et il vaut mieux utiliser toutes les données pour prédire le futur.
-
-## Le modèle retenu : régression bayésienne
+## La régression bayésienne de Christian
 
 **Notations.** $T_t$ est le Tmax de l'année $t$ (°C), $x_t=\ln(C_t)$ où $C_t$ est le CO2 de l'année (ppm), et
 $T=(T_{1940},\dots,T_{2025})$ la liste des $n=86$ valeurs observées. Le signe « $\mid$ » se lit « sachant » et
@@ -249,8 +216,9 @@ général de la droite).
 **Pourquoi $\ln(\mathrm{CO_2})$ ?** À la question précédente, CO2, $\ln(\mathrm{CO_2})$ et CO2² avaient la même corrélation
 (0,30 à 0,32). Mais en 2100 avec SSP5-8.5 (946 ppm), une simple droite donne un Tmax moyen d'environ 33 °C avec
 $\ln(\mathrm{CO_2})$, 38 °C avec CO2 et 48 °C avec CO2². On garde $\ln(\mathrm{CO_2})$ : l'effet du CO2 sur la température
-est connu pour être logarithmique (chaque doublement du CO2 réchauffe d'à peu près la même quantité), et c'est le seul
-choix qui reste réaliste en 2100.
+est souvent représenté par un forçage radiatif logarithmique. Cela motive cette ancre parcimonieuse,
+mais ne démontre pas que les extrêmes locaux suivent exactement cette loi. La sensibilité au choix de l'ancre
+est une limite des projections.
 
 **Pourquoi bayésien ?** Avec 86 années, on ne connaît pas $a$, $b$ et $\sigma$ exactement : la pente estimée vaut
 environ $7{,}4 \pm 2{,}5$. Sur les CO2 observés, ça change peu de chose, mais à 946 ppm une petite erreur sur la pente
@@ -261,8 +229,8 @@ $$p(a,b,\sigma^2)\propto\sigma^{-2}\,\mathbf 1_{b\ge0}.$$
 
 **La loi a posteriori** (ce qu'on sait des paramètres après avoir vu les données). On note $X$ le tableau des données
 (une colonne de 1 et une colonne $x_t$), $\hat\beta=(\hat a,\hat b)=(X^\top X)^{-1}X^\top T$ la droite des moindres carrés,
-et $\mathrm{MSE}=\frac1n\sum_t(T_t-\hat a-\hat b\,x_t)^2$ l'erreur quadratique moyenne de cette droite. Pour ce modèle,
-le résultat est classique :
+et $\mathrm{MSE}=\frac1n\sum_t(T_t-\hat a-\hat b\,x_t)^2$ l'erreur quadratique moyenne de cette droite. Avant le rejet des pentes négatives,
+on utilise le résultat classique du modèle linéaire gaussien :
 $$\sigma^2\mid T\sim\frac{n\cdot\mathrm{MSE}}{\chi^2_{n-2}},\qquad (a,b)\mid\sigma^2,T\sim\mathcal N\big(\hat\beta,\ \sigma^2(X^\top X)^{-1}\big).$$
 Le $\chi^2_{n-2}$ vient du fait que la somme des carrés des écarts, divisée par $\sigma^2$, est une somme de carrés de
 lois normales ($n-2$ car on a estimé deux paramètres, $a$ et $b$). Pour tirer $(a,b,\sigma)$ ensemble, on tire d'abord
@@ -298,7 +266,8 @@ def ajuster(x, t):
     mse = np.mean((t - X @ beta) ** 2)        # erreur quadratique moyenne de la droite
     return beta, V, mse, len(t)
 
-def tirer(modele, x_futur, n=N):
+def tirer(modele, x_futur, n=N, seed=0):
+    rng = np.random.default_rng(seed)
     # n tirages de la température pour chaque valeur de x_futur : tableau (n, nombre d'années)
     beta, V, mse, n_annees = modele
     params = np.empty((0, 3))
@@ -326,189 +295,16 @@ for var in ['max', 'min']:
     print(f'CRPS T{var} 2001-2025 : {crps(tirer(m, x[apres]), y[var].to_numpy()[apres]):.2f} °C')
 '''
 
-PROJ = r'''
-futur = yearly_future_co2.copy()
-futur['annee'] = pd.to_datetime(futur['valid_time']).dt.year
-SSP = {'ssp1-2.6': 'tab:green', 'ssp2-4.5': 'tab:orange', 'ssp5-8.5': 'tab:red'}
+DIFFUSION_MD = diffusion_etude.INTRO
+DIFFUSION = diffusion_etude.CODE_MODELE
+PROJ_MD = diffusion_etude.PROJECTION_MD
+PROJ = diffusion_etude.CODE_PROJECTION
+DIST = diffusion_etude.CODE_DISTRIBUTION
 
-def projeter(var):
-    # modèle réajusté sur 1940-2025, puis 10 000 tirages pour chaque année 2026-2100 et chaque scénario
-    m = ajuster(x, y[var].to_numpy())
-    return {s: tirer(m, np.log(futur[s].to_numpy())) for s in SSP}
-
-def tracer(var, sims, seuil):
-    plt.figure(figsize=(12, 4.5))
-    plt.plot(y['annee'], y[var], 'k.-', lw=0.8, ms=4, label='Observations 1940-2025')
-    for s, couleur in SSP.items():
-        q5, q50, q95 = np.percentile(sims[s], [5, 50, 95], axis=0)
-        plt.fill_between(futur['annee'], q5, q95, color=couleur, alpha=0.15)
-        plt.plot(futur['annee'], q50, color=couleur, lw=2, label=f'{s.upper()} : médiane et intervalle 5-95 %')
-    plt.axhline(seuil, color='grey', ls='--', lw=1)
-    plt.xlabel('Année')
-    plt.ylabel(f'T{var} annuelle (°C)')
-    plt.title(f'Projections de la T{var} annuelle à Brest (régression bayésienne)')
-    plt.legend(loc='upper left', fontsize=8)
-    plt.show()
-
-sims_max = projeter('max')
-tracer('max', sims_max, 40)
-'''
-
-DIST = r'''
-def resume_2100(sims, seuil, au_dessus=True):
-    lignes = {}
-    for s, t in sims.items():
-        depasse = t > seuil if au_dessus else t < seuil
-        lignes[s.upper()] = {'CO2 2100 (ppm)': futur[s].iloc[-1],
-                             **{f'q{p} 2100 (°C)': np.percentile(t[:, -1], p) for p in (5, 50, 95)},
-                             f'P(T 2100 {">" if au_dessus else "<"} {seuil} °C)': depasse[:, -1].mean(),
-                             'P(au moins une fois 2026-2100)': depasse.any(axis=1).mean()}
-    return pd.DataFrame(lignes).T
-
-plt.figure(figsize=(9, 4))
-for s, couleur in SSP.items():
-    plt.hist(sims_max[s][:, -1], np.arange(18, 46, 0.25), density=True, histtype='stepfilled', alpha=0.35,
-             color=couleur, label=s.upper())
-plt.axvline(40, color='grey', ls='--', label='40 °C')
-plt.xlabel('Tmax annuelle en 2100 (°C)')
-plt.ylabel('Densité de probabilité (1/°C)')
-plt.title('Loi de la Tmax en 2100 (régression bayésienne, 10 000 tirages)')
-plt.legend()
-plt.show()
-print('Régression bayésienne :')
-print(resume_2100(sims_max, 40).round(4).to_string())
-
-# même calcul avec la diffusion, pour comparer
-sims_diffusion = {s: tirer_diffusion(diffusion_max, np.log(futur[s].to_numpy())) for s in SSP}
-print('\nDiffusion :')
-print(resume_2100(sims_diffusion, 40).round(4).to_string())
-'''
-
-DIFFUSION_MD = r"""
-## Le modèle de diffusion (Elias)
-
-C'est le type de réseau suggéré par le sujet. L'idée, en trois points :
-
-- on garde une droite en $\ln(\mathrm{CO_2})$, l'« ancre », et on regarde les écarts des années à cette droite ;
-- un réseau de neurones apprend à fabriquer des écarts réalistes : on abîme un vrai écart avec du bruit, le réseau
-  doit retrouver un écart propre, et on note ses propositions avec le CRPS ;
-- pour prédire, on lui donne un bruit pur, il en fait un écart, et on l'ajoute à une droite tirée au hasard parmi 500
-  droites plausibles (l'« ancre incertaine »).
-
-En formules : avec $z=(T-a-b\ln C)/e$ l'écart réduit à la droite, on abîme $z$ en $u=(1-s)\,z+s\,\varepsilon$, avec un
-niveau de bruit $s\sim\mathcal U(0,1)$ et $\varepsilon\sim\mathcal N(0,1)$. Le réseau $g_\phi$ propose $M=32$ écarts
-$\hat z_m=g_\phi(u,s,\zeta_m)$, avec $\zeta_m\sim\mathcal N(0,1)$, et on minimise le CRPS de ces propositions face à $z$.
-Pour prédire, on prend $s=1$ et $u\sim\mathcal N(0,1)$, puis $T=a^{(k)}+b^{(k)}\ln C+e\,\hat z$.
-"""
-
-DIFFUSION = r"""
-alea = np.random.default_rng(1)       # générateur à part, pour ne pas changer les tirages de la suite
-
-def ancre(x, t):
-    # droite en ln(CO2), avec pente >= 0 (plus de CO2 ne refroidit pas)
-    b = max(np.polyfit(x, t, 1)[0], 0.0)
-    return np.mean(t - b * x), b
-
-class Debruiteur(torch.nn.Module):
-    # g(u, s, zeta) : reçoit un écart abîmé u, le niveau de bruit s et un hasard zeta, et propose un écart propre
-    def __init__(self):
-        super().__init__()
-        self.reseau = torch.nn.Sequential(torch.nn.Linear(3, 32), torch.nn.SiLU(),
-                                          torch.nn.Linear(32, 32), torch.nn.SiLU(), torch.nn.Linear(32, 1))
-    def forward(self, u, s, zeta):
-        return self.reseau(torch.stack([u, s, zeta], dim=-1)).squeeze(-1)
-
-def crps_entrainement(X, y, alpha=0.95):
-    # CRPS de M propositions X (lot, M) face à y (lot) : 95 % version sans biais + 5 % version empirique
-    M = X.shape[1]
-    X = X.sort(dim=1).values
-    w = 2 * torch.arange(1, M + 1) - M - 1
-    return ((X - y[:, None]).abs().mean(1) - (X * w).sum(1) * (alpha / (M * (M - 1)) + (1 - alpha) / M**2)).mean()
-
-def entrainer_diffusion(x, t, pas, M=32, B=500):
-    a, b = ancre(x, t)
-    r = t - a - b * x
-    e = np.std(r, ddof=2)
-    z = torch.tensor(r / e, dtype=torch.float32)                 # écarts réduits à la droite
-    torch.manual_seed(0)
-    g = Debruiteur()
-    opt = torch.optim.AdamW(g.parameters(), lr=1e-3, weight_decay=1e-4)
-    for _ in range(pas):
-        zb = z[torch.randint(len(z), (64,))]
-        s = torch.rand(64)                                       # niveau de bruit entre 0 et 1
-        u = (1 - s) * zb + s * torch.randn(64)                   # écart abîmé par le bruit
-        X = g(u[:, None].expand(-1, M), s[:, None].expand(-1, M), torch.randn(64, M))   # M propositions
-        opt.zero_grad()
-        crps_entrainement(X, zb).backward()
-        torch.nn.utils.clip_grad_norm_(g.parameters(), 1.0)
-        opt.step()
-    # ancre incertaine : B droites réajustées après avoir rééchantillonné les écarts par blocs de 3 années
-    n, rc = len(r), r - r.mean()
-    droites = []
-    for _ in range(B):
-        debuts = alea.integers(0, n, size=-(-n // 3))
-        ix = ((debuts[:, None] + np.arange(3)) % n).ravel()[:n]
-        droites.append(ancre(x, a + b * x + rc[ix]))
-    return g, e, np.array(droites)
-
-def tirer_diffusion(modele, x_futur, n=N):
-    g, e, droites = modele
-    with torch.no_grad():                                        # prédiction : bruit pur (s = 1), un passage
-        forme = (n, len(x_futur))
-        z = g(torch.randn(forme), torch.ones(forme), torch.randn(forme)).numpy()
-    a, b = droites[alea.integers(len(droites), size=n)].T
-    return a[:, None] + b[:, None] * x_futur + e * z
-
-PAS = {'max': 1250, 'min': 1500}      # nombres de pas retenus par Elias
-
-# même test que pour la régression bayésienne : appris sur 1940-2000, noté sur 2001-2025
-for var in ['max', 'min']:
-    m = entrainer_diffusion(x[avant], y[var].to_numpy()[avant], PAS[var])
-    print(f'Diffusion, CRPS T{var} 2001-2025 : {crps(tirer_diffusion(m, x[apres]), y[var].to_numpy()[apres]):.2f} °C')
-
-# Tmax en 2100 avec SSP5-8.5, après réentraînement sur 1940-2025
-# modèle réentraîné sur 1940-2025, utilisé à la question suivante pour les projections
-diffusion_max = entrainer_diffusion(x, y['max'].to_numpy(), PAS['max'])
-"""
-
-PROJ_MD = r"""
-## Projections jusqu'en 2100 avec la régression bayésienne
-
-On revient à la méthode retenue. La régression bayésienne est réentraînée sur toutes les années 1940-2025, puis on
-tire 10 000 températures pour chaque année de 2026 à 2100 et chaque scénario. Le graphique montre la médiane (trait)
-et l'intervalle 5-95 % (bande) des tirages.
-"""
-
-MINIMA = r'''
-# même étude que pour Tmax : d'abord les observations 1940-2025
-plt.plot(y['annee'], y['min'], 'o-', ms=3, lw=1, color='tab:blue', label='Minimum annuel')
-plt.plot(y['annee'], y['min'].rolling(11, center=True).mean(), lw=2.5, color='k', label='Moyenne glissante sur 11 ans')
-plt.xlabel('Année')
-plt.ylabel('Température (°C)')
-plt.title('Température minimale annuelle à Brest (1940-2025)')
-plt.legend()
-plt.show()
-print('Corrélation Tmin / ln(CO2) :', round(y['min'].corr(np.log(y['co2'])), 2))
-
-# projections avec le même modèle, et seuil de 0 °C (le gel) au lieu de 40 °C
-sims_min = projeter('min')
-tracer('min', sims_min, 0)
-
-plt.figure(figsize=(9, 4))
-for s, couleur in SSP.items():
-    plt.hist(sims_min[s][:, -1], np.arange(-10, 14, 0.25), density=True, histtype='stepfilled', alpha=0.35,
-             color=couleur, label=s.upper())
-plt.axvline(0, color='grey', ls='--', label='0 °C')
-plt.xlabel('Tmin annuelle en 2100 (°C)')
-plt.ylabel('Densité de probabilité (1/°C)')
-plt.title('Loi de la Tmin en 2100 (régression bayésienne, 10 000 tirages)')
-plt.legend()
-plt.show()
-print(resume_2100(sims_min, 0, au_dessus=False).round(3).to_string())
-'''
+MINIMA = diffusion_etude.CODE_MINIMA
 
 # ------------------------------------------------------------------ assemblage
-prof = json.loads(PROF.read_text())
+prof = json.loads(PROF.read_text(encoding='utf-8'))
 todo = iter([
     [code(SAISON), com('saison')],
     [code(VAGUES), com('vagues')],
@@ -516,7 +312,10 @@ todo = iter([
     [code(TMAX), com('tmax')],
     [code(CORREL), com('correl')],
     [md(METHODE), code(MODELES), code(COMPARAISON), com('comparaison'),
-     md(DIFFUSION_MD), code(DIFFUSION), com('diffusion'), md(PROJ_MD), code(PROJ), com('proj')],
+     md(DIFFUSION_MD), md(diffusion_etude.PROTOCOLE),
+     code(diffusion_etude.cellule_archives(ICI.parent)), md(diffusion_etude.ARCHIVES_COMMENTAIRE),
+     code(DIFFUSION), md(diffusion_etude.EXECUTION_MD), code(diffusion_etude.CODE_EXECUTION),
+     md(diffusion_etude.EXECUTION_COMMENTAIRE), md(PROJ_MD), code(PROJ), com('proj')],
     [code(DIST), com('dist')],
     [code(MINIMA), com('minima'), com('conclusion')],
 ])
@@ -529,10 +328,15 @@ for c in prof['cells']:
         cells.append(code(IMPORTS))
     elif src.startswith('The five students are'):
         cells.append(md(C['membres']))
+    elif c['cell_type'] == 'code':
+        src = src.replace("pd.read_csv('", "lire_donnees('")
+        cells.append(code(src))
     else:
-        cells.append({**c, 'outputs': [], 'execution_count': None} if c['cell_type'] == 'code' else c)
-nb = {**prof, 'cells': cells,
+        cells.append(c)
+nb = {**prof, 'nbformat': 4, 'nbformat_minor': 5, 'cells': cells,
       'metadata': {'kernelspec': {'name': 'python3', 'display_name': 'Python 3', 'language': 'python'},
                    'language_info': {'name': 'python'}}}
-SORTIE.write_text(json.dumps(nb, indent=1, ensure_ascii=False))
+for i, cellule in enumerate(cells):
+    cellule['id'] = f'cellule-{i:03d}'
+SORTIE.write_text(json.dumps(nb, indent=1, ensure_ascii=False), encoding='utf-8')
 print('écrit :', SORTIE)

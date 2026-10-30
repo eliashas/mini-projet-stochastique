@@ -1,4 +1,4 @@
-> **Rendu commun de l’équipe (branche `final`)** : ouvrir [le notebook final exécuté](notebooks/rendu_final_equipe.ipynb) et [les instructions de reproduction](README_RENDU_FINAL.md). Le notebook embarque ses ressources et couvre les deux parties du sujet. Les sections ci-dessous décrivent le pipeline historique d’Elias, conservé comme provenance.
+> **Rendu commun de l’équipe (branche `final`)** : ouvrir [le notebook à remettre](rendu_final_concis/rendu_final_groupe.ipynb), [son lien Colab](https://colab.research.google.com/github/eliashas/mini-projet-stochastique/blob/final/rendu_final_concis/rendu_final_groupe.ipynb) et [ses instructions](rendu_final_concis/README.md). La section diffusion comprend l’entraînement PyTorch sur GPU, les variantes et les projections comparées à Bayes. La [version détaillée](notebooks/rendu_final_equipe.ipynb) conserve la grande matrice d’expériences. Les sections ci-dessous décrivent le pipeline historique d’Elias, conservé comme provenance.
 
 # Projet SMA — extrêmes annuels et vagues de chaleur à Brest
 

@@ -77,98 +77,76 @@ La tendance de Tmax suit donc bien le CO2, mais pas la valeur d'une année préc
 prédictions probabilistes, et pas une seule valeur par année.
 '''
 
-C['comparaison'] = r'''
-**Commentaire.** On retrouve les scores du tableau : 1,57 °C pour Tmax et 0,98 °C pour Tmin, contre 1,70 et 1,14 °C
-pour le modèle de référence.
-'''
+C['comparaison'] = r"""
+Ces scores sont recalculés avec de nouveaux tirages. Les derniers centièmes peuvent différer des résultats archivés.
+On garde les deux tableaux distincts : la validation a servi aux choix ; le test décrit les performances observées
+sur 2001–2025, après ces choix.
+"""
 
-C['diffusion'] = r'''
-**Commentaire.** On retrouve les scores d'Elias : 1,65 °C pour Tmax et 0,99 °C pour Tmin. La diffusion fait mieux que
-la référence, mais pas mieux que la régression bayésienne (1,57 et 0,98 °C).
+C['proj'] = r"""
+**Commentaire.** Les deux méthodes donnent des médianes qui montent avec le CO₂ et des trajectoires proches pour
+un même scénario. Les trois scénarios se séparent progressivement : la concentration redescend à 400 ppm avec
+SSP1-2.6, atteint 527 ppm avec SSP2-4.5 et 946 ppm avec SSP5-8.5 en 2100. Les valeurs historiques ne dépassaient
+pas 428 ppm : le dernier scénario demande donc une forte extrapolation.
 
-La raison est simple : il n'y a pas assez de données. Le réseau a 1 217 paramètres à régler, et seulement 61 années
-pour apprendre. Avec si peu d'exemples, il ne peut pas apprendre la forme des écarts à la droite mieux qu'une simple
-loi normale. Ce qui l'aide vraiment, c'est l'ancre incertaine, c'est-à-dire la même idée que la régression bayésienne.
+Les bandes de D3 incluent la variabilité annuelle apprise et l'incertitude sur la droite. Celles de Bayes incluent
+la variabilité gaussienne et l'incertitude sur ses paramètres. Leur largeur ne mesure pas les erreurs possibles
+sur les hypothèses communes : ancre logarithmique, rôle du seul CO₂ et distribution résiduelle stable.
+"""
 
-En 2100 avec SSP5-8.5, la diffusion donne une médiane de 32,7 °C et une probabilité de dépasser 40 °C de 2,9 %,
-proches de nos résultats. On garde donc la régression bayésienne pour les projections : elle fait aussi bien, en plus
-simple.
-'''
+C['dist'] = r"""
+**Commentaire.** Sous SSP5-8.5, les médianes de D3 et Bayes sont proches : environ 32,6 et 32,8 °C dans cette
+exécution. Pourtant, la probabilité de dépasser 40 °C en 2100 vaut environ 2,6 % avec D3 et 1,5 % avec Bayes.
+Ce seuil se situe dans la queue droite : une différence de dispersion ou de forme de la loi peut beaucoup
+changer la proportion de dépassements. La comparaison permet de voir cette sensibilité au modèle.
 
-C['proj'] = r'''
-**Commentaire.** Les trois scénarios partent du même niveau en 2026 (médiane d'environ 27 °C) puis s'écartent. Avec
-SSP1-2.6, le CO2 redescend à 400 ppm et la médiane reste à 26,5 °C en 2100. Avec SSP2-4.5, elle atteint 28,5 °C, et avec
-SSP5-8.5 (946 ppm) 32,8 °C : une année normale de 2100 serait alors aussi chaude que les années les plus chaudes
-observées jusqu'ici. Les bandes 5-95 % sont larges (environ 7 °C en 2026, 11 °C en 2100 pour SSP5-8.5) : Tmax varie
-beaucoup d'une année à l'autre, et l'incertitude sur la pente compte de plus en plus quand le CO2 augmente.
-'''
+Le risque en 2100 concerne **une année**. Le risque « au moins une fois » concerne **75 années** : il est calculé
+sur des trajectoires où les paramètres sont partagés dans le temps et les innovations annuelles sont indépendantes
+conditionnellement à ces paramètres. Une autre dépendance entre années pourrait changer ce risque cumulé.
+Sous SSP5-8.5, ce risque cumulé vaut environ 17,2 % avec D3 et 8,1 % avec Bayes dans cette exécution.
 
-C['dist'] = r'''
-<div style="border: 3px solid #c0392b; border-radius: 8px; padding: 10px 16px; margin: 8px 0;">
+Un résultat de zéro dépassement n'est pas une probabilité physique nulle. Avec 10 000 tirages indépendants,
+la borne binomiale supérieure à 95 % est d'environ 0,03 % pour le modèle simulé. Elle mesure seulement l'erreur
+Monte-Carlo. L'incertitude liée au modèle et à l'extrapolation est beaucoup plus difficile à quantifier.
+On n'a observé aucun Tmax supérieur à 34,2 °C dans ces données : le test historique ne valide pas directement
+la queue à 40 °C en 2100.
+"""
 
-**Réponse : probabilité de dépasser 40 °C à Brest (régression bayésienne)**
+C['minima'] = r"""
+**Approche et commentaire.** On reprend les étapes pour Tmin avec D1, retenu sur validation, et Bayes comme
+comparaison. Le seuil choisi est **0 °C**, pour décrire les années avec gel. Il ne s'agit pas du nombre de jours
+de gel : une seule journée négative suffit à rendre le minimum annuel négatif.
 
-| Scénario | Médiane de Tmax en 2100 | P(Tmax 2100 > 40 °C) | P(au moins une année > 40 °C entre 2026 et 2100) |
-|:--|:-:|:-:|:-:|
-| SSP1-2.6 | 26,5 °C | ≈ 0 | ≈ 0 |
-| SSP2-4.5 | 28,5 °C | ≈ 0 | ≈ 0 |
-| SSP5-8.5 | 32,8 °C | **1,5 %** | **7,8 %** |
+Sur 1940–2025, le minimum annuel est négatif 52 années sur 86. Il varie de −6,6 °C en 1987 à 2,6 °C en 2019.
+Le lien avec le CO₂ est plus faible que pour Tmax, avec une corrélation d'environ 0,15. La moyenne sur 11 ans
+reste proche de −0,7 °C jusque vers 2000, puis remonte. Les différences entre années sont importantes.
 
-</div>
+Dans les projections, les minima remontent avec le CO₂ et la probabilité de gel en 2100 diminue. Un résultat
+proche de 100 % dans la colonne « au moins une fois » signifie que presque toutes les trajectoires simulées
+contiennent une année avec gel entre 2026 et 2100 ; il ne signifie pas qu'il gèlera chaque année.
+La faible relation historique et les hypothèses sur l'évolution de la dispersion limitent ces projections.
 
-**Commentaire.** Dépasser 40 °C reste rare pour une année donnée, même en 2100 avec SSP5-8.5 (1,5 %). Sur 75 ans, le
-risque s'accumule : dans ce scénario, environ 1 trajectoire sur 13 dépasse 40 °C au moins une fois. Avec 10 000
-tirages, « 0 » veut seulement dire moins d'environ 1 chance sur 10 000, pas que c'est impossible.
+Sous SSP5-8.5, D1 et Bayes donnent une probabilité de gel en 2100 d'environ 18 % et 17 %. Leurs intervalles
+diffèrent toutefois : D1 conserve une ancre fixe et une dispersion résiduelle stable, donc sa bande garde une
+largeur presque constante. Bayes inclut l'incertitude sur la pente et sa bande s'élargit. D1 était préférable
+sur la validation historique ; cela ne garantit pas qu'il représente toute l'incertitude d'une extrapolation à 2100.
+"""
 
-La diffusion donne des médianes très proches (26,2 / 28,3 / 32,7 °C), mais une queue un peu plus longue du côté chaud :
-2,9 % en 2100 et 17 % au moins une fois d'ici 2100 avec SSP5-8.5. L'ordre de grandeur est le même : quelques pour cent
-pour une année, et de l'ordre de 10 % sur 75 ans dans le pire scénario.
-
-Il faut prendre ces chiffres avec prudence : 40 °C est loin de tout ce qu'on a observé (34,2 °C au maximum), et on
-extrapole jusqu'à 946 ppm alors qu'on n'a vu que 310 à 428 ppm. Le CO2 est aussi la seule entrée du modèle.
-'''
-
-C['minima'] = r'''
-**Approche.** On refait la même étude avec la même régression bayésienne : sur le test 2001-2025, elle a aussi
-le meilleur CRPS pour Tmin (0,98 °C), pratiquement à égalité avec la GEV et la diffusion d'Elias (voir la question 3). Le prof ne donne pas de seuil pour Tmin :
-on prend **0 °C**, le seuil du gel. Sur 1940-2025, le minimum annuel a été négatif 52 années sur 86.
-
-<div style="border: 3px solid #c0392b; border-radius: 8px; padding: 10px 16px; margin: 8px 0;">
-
-**Réponse : probabilité que le minimum annuel soit sous 0 °C (régression bayésienne)**
-
-| Scénario | Médiane de Tmin en 2100 | P(Tmin 2100 < 0 °C) | P(au moins une année < 0 °C entre 2026 et 2100) |
-|:--|:-:|:-:|:-:|
-| SSP1-2.6 | −0,4 °C | **58 %** | 100 % |
-| SSP2-4.5 | 0,5 °C | **39 %** | 100 % |
-| SSP5-8.5 | 2,5 °C | **17 %** | 100 % |
-
-</div>
-
-**Commentaire.** Tmin varie de −6,6 °C (1987) à 2,6 °C (2019). Contrairement à Tmax, la moyenne sur 11 ans ne montre
-pas de tendance nette jusqu'en 2000 : la moyenne vaut −0,7 °C sur 1940-1979 comme sur 1980-2025, avec des hivers très
-froids au milieu des années 1980 (−5,5 °C en 1985, −6,6 °C en 1987). Elle remonte seulement depuis 2000, jusqu'à
-environ +0,3 °C autour de 2020. Le lien avec le CO2 est donc encore plus faible que pour Tmax ($r=0{,}15$).
-
-Dans les projections, les minima remontent avec le CO2 : la médiane 2100 vaut −0,4 °C (SSP1-2.6), 0,5 °C (SSP2-4.5)
-et 2,5 °C (SSP5-8.5). La probabilité que le minimum de 2100 soit sous 0 °C passe de 58 % à 17 %. Il gèlera encore au
-moins une fois entre 2026 et 2100 dans tous les scénarios (100 % des tirages), mais les hivers sans gel deviennent
-fréquents avec SSP5-8.5. Sur l'histogramme, la loi de 2100 se décale vers la droite et s'élargit quand le CO2
-augmente, comme pour Tmax. Comme le lien avec le CO2 est faible sur le passé, ces projections sont moins sûres que
-celles de Tmax.
-'''
-
-C['conclusion'] = r'''
+C['conclusion'] = r"""
 # Conclusion
 
-- **Le passé.** À Brest, l'écart entre l'hiver et l'été est faible (environ 9 °C). Les vagues de chaleur sont devenues
-  bien plus fréquentes : environ 3 par an dans les années 1960-1970, 12 par an sur 2020-2025. La plus intense est
-  celle de juillet 2022.
-- **Le futur.** Le lien entre les extrêmes annuels et le CO2 est faible d'une année à l'autre, mais net sur la
-  tendance. Parmi les modèles du groupe, la régression bayésienne a le meilleur CRPS sur 2001-2025 (1,57 °C contre
-  1,70 °C pour la référence). En 2100, la médiane du maximum annuel va de 26,5 °C (SSP1-2.6) à 32,8 °C (SSP5-8.5).
-  Dépasser 40 °C reste rare une année donnée (1,5 % en 2100 avec SSP5-8.5), mais atteint 7,8 % sur l'ensemble
-  2026-2100 dans ce scénario. Pour les minima, le gel devient moins fréquent sans disparaître.
-- **Limites.** 86 années, c'est peu pour connaître les valeurs extrêmes. Le CO2 est notre seule variable explicative,
-  et les scénarios nous font extrapoler bien au-delà des concentrations observées.
-'''
+À Brest, le cycle saisonnier est modéré par rapport aux variations que peut connaître une région continentale.
+Avec le seuil saisonnier retenu, on identifie 421 vagues de chaleur d'au moins trois jours. Leur fréquence augmente
+nettement sur les dernières décennies ; la plus intense de la période est celle de juillet 2022.
+
+Pour les extrêmes annuels, la diffusion apprend une distribution de fluctuations à partir de données bruitées.
+L'ajout de l'incertitude sur la tendance apporte davantage que la pondération des extrêmes dans nos expériences
+Tmax. Le protocole de validation retient D3 pour Tmax et D1 pour Tmin. Bayes reste une comparaison utile :
+il obtient un meilleur CRPS global observé sur le test, avec une formulation plus simple. Ce résultat ne permet
+pas de conclure qu'une distribution gaussienne serait toujours suffisante.
+
+En 2100, les deux approches prévoient des maxima plus élevés sous SSP5-8.5 et des minima moins souvent négatifs.
+Elles peuvent donner des médianes proches et des risques de dépassement sensiblement différents. Les probabilités
+à 40 °C dépendent d'une extrapolation très au-delà des observations et du choix de la distribution résiduelle.
+Les 10 000 simulations rendent les calculs Monte-Carlo précis ; elles ne suppriment pas cette incertitude.
+"""

@@ -1,7 +1,9 @@
 # Les empreintes portent sur les octets réellement livrés dans le paquet.
 /rendu_final/** -text -whitespace
 /notebooks/rendu_final_equipe.ipynb -text -whitespace
+/rendu_final_concis/rendu_final_groupe.ipynb -text -whitespace
 /reports/final/*.json -text -whitespace
+/reports/final_concis/*.json -text -whitespace
 /reports/final/*.svg -whitespace
 *.py text eol=lf
 /requirements-final.txt text eol=lf

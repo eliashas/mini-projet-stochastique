@@ -1,10 +1,16 @@
 # Rendu commun SMA
 
-Le fichier à remettre est **`notebooks/rendu_final_equipe.ipynb`**. Il couvre
-les deux parties du sujet et contient ses données, ses petits modèles et ses
-résultats de référence. Il peut être téléchargé seul puis ouvert dans Colab,
-sans accès au dépôt ni chemin personnel. Un seul notebook maître doit être
-partagé pour la relecture du groupe ; les noyaux Colab restent individuels.
+Le fichier à remettre est désormais **`rendu_final_concis/rendu_final_groupe.ipynb`** :
+[ouvrir dans Colab](https://colab.research.google.com/github/eliashas/mini-projet-stochastique/blob/final/rendu_final_concis/rendu_final_groupe.ipynb)
+et [lire ses instructions](rendu_final_concis/README.md). Il comprend l'étude de diffusion,
+son entraînement sur GPU et les projections des deux approches.
+
+## Version détaillée et expériences complètes
+
+Les instructions qui suivent concernent **`notebooks/rendu_final_equipe.ipynb`**,
+conservé comme version détaillée. Il couvre les deux parties du sujet et contient
+ses données, ses petits modèles et ses résultats de référence. Il peut être téléchargé
+seul puis ouvert dans Colab, sans accès au dépôt ni chemin personnel.
 
 [Ouvrir le notebook dans Colab](https://colab.research.google.com/github/eliashas/mini-projet-stochastique/blob/final/notebooks/rendu_final_equipe.ipynb).
 Le téléchargement du fichier puis son ouverture manuelle dans Colab fonctionne
