@@ -1,7 +1,7 @@
 # Vérification du rendu avec la section diffusion
 
 Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
-`3bbffb4c95ed2f897579f634b70b156779d178be`. Le notebook à remettre est
+`a58bce9465964dc6c7d5aed1b9d0834f75572eff`. Le notebook à remettre est
 `rendu_final_concis/rendu_final_groupe.ipynb`.
 
 ## Exécution
@@ -9,13 +9,13 @@ Vérification du 30 octobre 2026. Base de travail : branche `final`, commit
 Commande :
 
 ```powershell
-python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_christian_20261030 --sans-reseau
+python -X utf8 rendu_final_concis/executer.py --dossier tmp/verification_csv_locaux_20261030 --sans-reseau
 ```
 
-- Noyau neuf, dossier sans données locales : les trois CSV sont lus dans l’archive intégrée et vérifiés, sans téléchargement.
+- Noyau neuf, dossier isolé contenant seulement les trois CSV : lecture directe avec Pandas, sans téléchargement.
 - PyTorch 2.5.1+cu121 ; GPU NVIDIA GeForce GTX 1660 Ti.
 - 16 cellules de code exécutées sur 16 ; aucune sortie d'erreur.
-- Durée totale : 166,2 s, lecture des données et production des figures comprises.
+- Durée totale : 199,3 s, lecture des données et production des figures comprises.
 - 19 réseaux réellement entraînés : un pour la courbe diagnostique, douze pour D1/D2
   sur 1940–2000 (deux variables, deux objectifs, trois graines), six réajustés sur 1940–2025.
 - Les 10 figures sont extraites à côté de ce rapport. Les cinq figures d'apprentissage,
@@ -131,3 +131,22 @@ et les dix figures à l’identique. La partie Bayes et toutes les cellules hors
 modèle sont inchangées. Les données restent intégrées, sans appel réseau externe.
 Preuve détaillée : `equivalence_christian.json`. Les preuves antérieures restent
 archivées avec l’empreinte du notebook auquel elles se rapportent.
+
+
+## Version finale avec CSV à côté du notebook
+
+Le bloc encodé de la cellule d’initialisation a été retiré. Les trois fichiers
+sont lus directement avec `pd.read_csv` dans le dossier de travail. Les tables
+obtenues (valeurs et types) sont strictement identiques à celles de l’ancienne
+archive intégrée. Les deux parties méthodologiques, les résultats, les tableaux
+et les dix figures sont inchangés. Une exécution complète avec les trois CSV
+copiés dans un dossier isolé et les connexions externes bloquées a réussi,
+sans aucun appel réseau.
+
+Le script `rendu_final_concis/preparer_rendu.py` crée le livrable à transmettre :
+`tmp/livrable_sma/rendu_final_groupe.zip`, contenant exactement le notebook
+exécuté et les trois CSV. Il faut décompresser les quatre fichiers dans le même
+dossier ; dans Colab, les CSV doivent être déposés dans l’onglet Fichiers.
+Le notebook seul ne contient donc plus les données. Le ZIP final a été vérifié
+par CRC et comparaison exacte des quatre fichiers. Preuve : `csv_locaux.json`.
+Les sections et preuves précédentes décrivent l’historique des versions.

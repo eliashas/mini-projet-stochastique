@@ -1,0 +1,26 @@
+{
+  "base_commit": "a58bce9465964dc6c7d5aed1b9d0834f75572eff",
+  "lectures_csv_directes": 3,
+  "archive_encodee_dans_notebook": false,
+  "reference_au_depot": false,
+  "parties_bayes_et_diffusion_identiques": true,
+  "tableaux_scores_et_projections_identiques": true,
+  "figures_identiques": 10,
+  "tables_entree_et_types_identiques": true,
+  "verification_hors_ligne": {
+    "protection_active": true,
+    "tentatives_exterieures": 0
+  },
+  "cellules_executees": 16,
+  "secondes": 199.29150530000334,
+  "notebook_octets": 833561,
+  "sha256_notebook": "de43c2f9a1a089e9265f035bc04ae77c0834d79b67743dc808da0a942848588d",
+  "zip_fichiers": [
+    "rendu_final_groupe.ipynb",
+    "daily_temp_brest.csv",
+    "yearly_temp_brest.csv",
+    "yearly_future_co2.csv"
+  ],
+  "zip_octets": 838503,
+  "zip_sha256": "0ad0fc2f571b14285b7fe9995f694403490b82e0497dba9767cf66d7128cf759"
+}

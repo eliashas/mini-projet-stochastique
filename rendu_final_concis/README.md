@@ -1,29 +1,30 @@
 # Rendu final du groupe (version concise)
 
-Le fichier à rendre est **`rendu_final_groupe.ipynb`**, déjà exécuté.
+Le rendu contient **`rendu_final_groupe.ipynb`**, déjà exécuté, et les trois CSV du sujet.
+Les quatre fichiers doivent rester dans le même dossier après décompression.
 
-- **Ouvrir dans Colab** : importer le fichier `rendu_final_groupe.ipynb` depuis l'ordinateur.
+- **Ouvrir dans Colab** : importer le notebook, puis déposer les trois CSV dans l'onglet *Fichiers*.
 - **Relancer** : choisir un GPU dans *Exécution > Modifier le type d'exécution*, puis *Tout exécuter*.
   Le notebook entraîne réellement les réseaux ; prévoir quelques minutes. Il fonctionne aussi sur CPU.
-  Les trois CSV sont intégrés dans une archive compressée à l'intérieur du notebook.
-  Aucun téléchargement de données et aucun autre fichier ne sont nécessaires.
+  Les données sont lues directement avec `pd.read_csv`, sans téléchargement.
 - **Travailler à plusieurs** : enregistrer une seule copie dans Drive et la partager avec les membres comme éditeurs.
-  Garder une seule copie commune pour la relecture et le rendu.
+  Garder une seule copie commune pour la relecture et le rendu. Chaque session Colab doit disposer des CSV.
 
 Pour modifier le notebook : changer le code dans `build.py` ou les commentaires dans `commentaires.py`, puis
 `python rendu_final_concis/build.py` depuis la racine du dépôt, puis
 `python rendu_final_concis/executer.py`. Le constructeur remplace le notebook : intégrer les modifications des
 cellules dans les sources avant de le relancer. Les chiffres cités dans les commentaires doivent correspondre aux sorties.
 
-Pour vérifier son autonomie dans un dossier vide :
+Pour préparer le ZIP à transmettre :
 
 ```powershell
-python rendu_final_concis/executer.py --dossier tmp/verification_autonome --sans-reseau
+python rendu_final_concis/preparer_rendu.py
 ```
 
-La cellule d'initialisation contient les données et s'affiche repliée. Elle les décompresse en mémoire et vérifie
-leurs empreintes avant lecture. Les bibliothèques Python, dont PyTorch, doivent être installées ; elles sont
-habituellement présentes dans Colab. L'exécution ne fait aucun appel réseau pour récupérer des données ou du code.
+Le ZIP est créé dans `tmp/livrable_sma/rendu_final_groupe.zip`. Il contient uniquement le notebook et les trois CSV.
+Pour vérifier l'exécution sans connexion externe, lancer `python rendu_final_concis/executer.py --sans-reseau`.
+On peut aussi utiliser `--dossier` pour un autre dossier contenant les trois CSV.
+Les bibliothèques Python, dont PyTorch, doivent être installées ; elles sont habituellement présentes dans Colab.
 
 Les sections Bayes et diffusion suivent la même structure : explication mathématique, deux cellules de code,
 puis commentaire. Leurs textes explicatifs ont une longueur voisine. Les équations et le code de Bayes sont conservés.
@@ -43,6 +44,7 @@ Les tirages ne sont pas coupés pour les faire entrer dans un intervalle physiqu
 | `build.py`, `commentaires.py` | Construisent le notebook à partir de celui du prof (`sujet_prof.ipynb`) |
 | `diffusion.py` | Sources des cellules de diffusion, copiées dans le notebook lors de sa construction |
 | `executer.py` | Exécute le notebook, conserve ses sorties et extrait les figures pour vérification |
+| `preparer_rendu.py` | Prépare le ZIP contenant les quatre fichiers à transmettre |
 | `*.csv` | Les données du prof |
 
-Le notebook s'exécute seul dans Colab : il n'importe pas les scripts du dépôt.
+Le notebook n'importe aucun script du dépôt. Il lui faut seulement les trois CSV dans son dossier de travail.
