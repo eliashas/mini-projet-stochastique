@@ -183,8 +183,8 @@ contribution (CRPS test annoncé : 1,85 / 1,18 °C), mais n'ont pas été réév
 Ils ne participent donc pas au choix sur validation de ce tableau.
 
 **D3 pour Tmax et D1 pour Tmin sont retenus sur validation.** Bayes a le meilleur CRPS observé sur le test
-parmi ces méthodes, sans que cela justifie de refaire le choix après lecture du test. Le test avait déjà été
-consulté dans le groupe : sa comparaison est rétrospective. Les petites différences ne suffisent pas à prouver
+parmi ces méthodes, sans que cela justifie de refaire le choix après lecture du test. Les petites différences
+ne suffisent pas à prouver
 qu'un modèle sera meilleur sur de nouvelles années.
 
 ### Pourquoi le CRPS ?

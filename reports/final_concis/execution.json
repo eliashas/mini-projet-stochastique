@@ -2,7 +2,7 @@
   "date_utc": "2026-10-30T18:27:19.845660+00:00",
   "secondes": 199.29150530000334,
   "notebook": "rendu_final_concis\\rendu_final_groupe.ipynb",
-  "sha256": "de43c2f9a1a089e9265f035bc04ae77c0834d79b67743dc808da0a942848588d",
+  "sha256": "27682c7095dcb93153b0e887868d38b4e89dbac2f26855bb49bc9c754d0ab60c",
   "dossier_execution": "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\verification_csv_locaux_20261030",
   "cellules_code": 16,
   "cellules_executees": 16,
@@ -36,5 +36,14 @@
   "verification_hors_ligne": {
     "protection_active": true,
     "tentatives_exterieures": 0
+  },
+  "retouches_apres_execution": {
+    "cellules_markdown": [
+      32,
+      35,
+      49
+    ],
+    "code_et_sorties_inchanges": true,
+    "description": "Conclusion chiffrée, retrait de la phrase sur le test consulté et commentaire de la couverture Bayes. Aucun nouvel entraînement."
   }
 }

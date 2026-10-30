@@ -81,6 +81,9 @@ C['comparaison'] = r"""
 Ces scores sont recalculés avec de nouveaux tirages. Les derniers centièmes peuvent différer des résultats archivés.
 On garde les deux tableaux distincts : la validation a servi aux choix ; le test décrit les performances observées
 sur 2001–2025, après ces choix.
+
+Sur 2001–2025, l’intervalle prédictif à 90 % de Bayes contient Tmax pour 20 années sur 25 (80 %),
+ce qui suggère des intervalles un peu trop étroits sur cette période.
 """
 
 C['proj'] = r"""
@@ -135,19 +138,15 @@ sur la validation historique ; cela ne garantit pas qu'il représente toute l'in
 C['conclusion'] = r"""
 # Conclusion
 
-À Brest, le cycle saisonnier est modéré par rapport aux variations que peut connaître une région continentale.
-Avec le seuil saisonnier retenu, on identifie 421 vagues de chaleur d'au moins trois jours. Leur fréquence augmente
-nettement sur les dernières décennies ; la plus intense de la période est celle de juillet 2022.
+On identifie **421 vagues de chaleur** d'au moins trois jours entre 1940 et 2025, avec une fréquence
+plus élevée sur les dernières décennies. La plus intense est celle de juillet 2022.
 
-Pour les extrêmes annuels, la régression bayésienne représente l'incertitude sur la droite et sur la variabilité
-annuelle. Elle obtient le meilleur CRPS global observé sur le test parmi les méthodes principales comparées,
-avec une formulation parcimonieuse. La diffusion apprend la distribution des fluctuations à partir de données
-bruitées. L'ajout de l'incertitude sur la tendance apporte davantage que la pondération des extrêmes dans nos
-expériences Tmax. Le protocole de validation retient D3 pour Tmax et D1 pour Tmin. Ces classements différents
-montrent que les conclusions dépendent des années évaluées ; ils ne prouvent pas la supériorité générale d'une méthode.
+**Modèles retenus sur validation : D3 pour Tmax et D1 pour Tmin.** En 2100 sous SSP5-8.5, D3 donne une
+médiane de Tmax d'environ **32,6 °C**, une probabilité de dépasser 40 °C de **2,6 % dans l'année** et de
+**17 % au moins une fois entre 2026 et 2100**. Bayes donne, en comparaison, environ **1,5 %** et **8 %**
+pour ces deux risques. Pour Tmin, la probabilité de gel en 2100 est d'environ **18 % avec D1**, contre
+**17 % avec Bayes**, dans le même scénario.
 
-En 2100, les deux approches prévoient des maxima plus élevés sous SSP5-8.5 et des minima moins souvent négatifs.
-Elles peuvent donner des médianes proches et des risques de dépassement sensiblement différents. Les probabilités
-à 40 °C dépendent d'une extrapolation très au-delà des observations et du choix de la distribution résiduelle.
-Les 10 000 simulations rendent les calculs Monte-Carlo précis ; elles ne suppriment pas cette incertitude.
+Ces probabilités restent sensibles à l'extrapolation au-delà des CO₂ observés, à la loi des fluctuations
+et à l'hypothèse de dépendance entre les années.
 """

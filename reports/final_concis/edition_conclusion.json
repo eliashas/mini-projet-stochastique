@@ -1,0 +1,22 @@
+{
+  "date_utc": "2026-10-30T18:38:09.080667+00:00",
+  "base": "72bb5ee8948887cfba6eb29675a1492c8ecbd174",
+  "cellules_markdown_modifiees": [
+    32,
+    35,
+    49
+  ],
+  "code_sorties_et_math_bayes_inchanges": true,
+  "nouvelle_execution_necessaire": false,
+  "notebook_sha256": "27682c7095dcb93153b0e887868d38b4e89dbac2f26855bb49bc9c754d0ab60c",
+  "code_cellules_sha256": "3c69d48dced4c84086df20eb5029b6c9a24a0cef356b3c083cffddf413a909a9",
+  "zip_sha256": "5250efb35f22a72a89cd12da4576954e6cbf885799b7bceb06a69b918d2577cd",
+  "chiffres_confirmes_sorties_existantes": {
+    "Tmax_D3_SSP585_2100_mediane_C": 32.551,
+    "Tmax_D3_depassement_annuel_40_pourcent": 2.61,
+    "Tmax_D3_depassement_cumule_2026_2100_pourcent": 17.22,
+    "Tmax_Bayes_depassement_annuel_40_pourcent": 1.53,
+    "Tmax_Bayes_depassement_cumule_2026_2100_pourcent": 8.14,
+    "Tmax_Bayes_couverture_90_pourcent": 80
+  }
+}

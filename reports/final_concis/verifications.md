@@ -150,3 +150,14 @@ dossier ; dans Colab, les CSV doivent être déposés dans l’onglet Fichiers.
 Le notebook seul ne contient donc plus les données. Le ZIP final a été vérifié
 par CRC et comparaison exacte des quatre fichiers. Preuve : `csv_locaux.json`.
 Les sections et preuves précédentes décrivent l’historique des versions.
+
+
+## Conclusion et couverture Bayes
+
+Trois cellules de texte ont été retouchées : conclusion chiffrée, retrait de la
+phrase sur le test déjà consulté et commentaire de la couverture à 90 % de Bayes
+pour Tmax (20 années sur 25). Le code, les sorties exécutées, les figures et les
+formules bayésiennes sont strictement inchangés. Les chiffres sont arrondis à
+partir des sorties existantes ; aucun entraînement supplémentaire n’a été lancé.
+Le ZIP a été régénéré et ses quatre fichiers vérifiés. Preuve :
+`edition_conclusion.json`.
