@@ -155,8 +155,11 @@ print(tableau.round(2))
 METHODE = r'''
 ## Notre démarche
 
-Nous étudions une diffusion distributionnelle pour générer les fluctuations annuelles, avec une régression
-bayésienne comme comparaison. Les autres propositions du groupe permettent de situer leurs résultats.
+Nous développons deux approches de prévision probabiliste : la **régression bayésienne** de Christian et la
+**diffusion distributionnelle** d'Elias. La première représente l'incertitude sur la tendance et sur la
+variabilité annuelle avec un modèle paramétrique. La seconde apprend la distribution des fluctuations
+avec un réseau de neurones. On présente leurs équations, leur code et leurs projections sous les trois
+scénarios, puis on discute leurs différences. Les autres propositions du groupe complètent la comparaison.
 
 ### Contributions et protocole
 

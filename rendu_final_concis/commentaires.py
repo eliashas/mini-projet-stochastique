@@ -139,11 +139,12 @@ C['conclusion'] = r"""
 Avec le seuil saisonnier retenu, on identifie 421 vagues de chaleur d'au moins trois jours. Leur fréquence augmente
 nettement sur les dernières décennies ; la plus intense de la période est celle de juillet 2022.
 
-Pour les extrêmes annuels, la diffusion apprend une distribution de fluctuations à partir de données bruitées.
-L'ajout de l'incertitude sur la tendance apporte davantage que la pondération des extrêmes dans nos expériences
-Tmax. Le protocole de validation retient D3 pour Tmax et D1 pour Tmin. Bayes reste une comparaison utile :
-il obtient un meilleur CRPS global observé sur le test, avec une formulation plus simple. Ce résultat ne permet
-pas de conclure qu'une distribution gaussienne serait toujours suffisante.
+Pour les extrêmes annuels, la régression bayésienne représente l'incertitude sur la droite et sur la variabilité
+annuelle. Elle obtient le meilleur CRPS global observé sur le test parmi les méthodes principales comparées,
+avec une formulation parcimonieuse. La diffusion apprend la distribution des fluctuations à partir de données
+bruitées. L'ajout de l'incertitude sur la tendance apporte davantage que la pondération des extrêmes dans nos
+expériences Tmax. Le protocole de validation retient D3 pour Tmax et D1 pour Tmin. Ces classements différents
+montrent que les conclusions dépendent des années évaluées ; ils ne prouvent pas la supériorité générale d'une méthode.
 
 En 2100, les deux approches prévoient des maxima plus élevés sous SSP5-8.5 et des minima moins souvent négatifs.
 Elles peuvent donner des médianes proches et des risques de dépassement sensiblement différents. Les probabilités

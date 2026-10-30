@@ -2,7 +2,7 @@
   "date_utc": "2026-10-30T09:00:26.332325+00:00",
   "secondes": 226.755158999993,
   "notebook": "rendu_final_concis\\rendu_final_groupe.ipynb",
-  "sha256": "67714a573c3579bb4378984d928c9cbf19a0464c00d3ee3a98367cc118ac7a56",
+  "sha256": "e03d9a78e6d569574b323e75a61449273bd22642cce269fa7c31a2efbd9d4876",
   "dossier_execution": "C:\\Users\\edlas\\OneDrive\\Documents\\ChatGPT\\Mini projet stochastique\\tmp\\verification_concis_20261030",
   "cellules_code": 17,
   "cellules_executees": 17,
@@ -42,5 +42,5 @@
     "Contrôle numérique des projections (bornes larges du protocole du groupe) :\n"
   ],
   "code_cellules_sha256": "1426a1d6e582ae81b9d44644b1a643467f29c7d317063e539c4a13130d57a5d7",
-  "retouches_apres_execution": "Commentaires et version du format notebook (4.5) ; code inchangé et sorties conservées après comparaison exacte des 17 cellules."
+  "retouches_apres_execution": "Commentaires, présentation équilibrée de Bayes et de la diffusion, format notebook 4.5 ; les 17 cellules de code sont inchangées, sorties conservées après comparaison exacte."
 }

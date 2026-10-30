@@ -339,10 +339,11 @@ pour relâcher l'hypothèse de fluctuations gaussiennes et étudier la sensibili
 '''
 
 PROJECTION_MD = r'''
-## Projections jusqu'en 2100 : diffusion et régression bayésienne
+## Projections jusqu'en 2100 : régression bayésienne et diffusion
 
-On réajuste les modèles sur **1940–2025**, avec les réglages conservés : D3 pour Tmax et D1 pour Tmin.
-On garde Bayes comme comparaison. Pour chaque scénario, on génère 10 000 trajectoires de 2026 à 2100.
+La régression bayésienne et la diffusion sont réajustées sur **1940–2025**. Pour la diffusion, on conserve
+les variantes retenues sur validation : D3 pour Tmax et D1 pour Tmin. Chaque méthode génère
+10 000 trajectoires de 2026 à 2100 pour chacun des trois scénarios.
 Les traits montrent les médianes et les bandes les quantiles 5 % et 95 % des températures annuelles.
 
 Dans une trajectoire de diffusion, on conserve le même réseau et, pour D3, la même droite ; les innovations
